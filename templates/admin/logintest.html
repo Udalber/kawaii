@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/kawaii_admin.css' %}">
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+{% block nav-global %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Sorpresas Kawaii</a></h1>
+<div class="nav-links">
+    <a href="#">Productos</a>
+    <a href="#">Combos</a>
+    <a href="#">Sobre Nosotros</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="login-wrapper">
+        <h2>Bienvenido</h2>
+
+        {% if form.errors and not form.non_field_errors %}
+        <p class="errornote">
+        {% if form.errors.items|length == 1 %}{% translate "Please enter your username and password." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
+        </p>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+            <p class="errornote">
+                {{ error }}
+            </p>
+            {% endfor %}
+        {% endif %}
+
+        <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+            <div class="form-row">
+                <input type="email" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" placeholder="Correo Electronico" autofocus required>
+            </div>
+            <div class="form-row">
+                <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" placeholder="Contraseña" required>
+            </div>
+
+            {% url 'admin:password_reset' as password_reset_url %}
+            {% if password_reset_url %}
+            <div class="password-reset-link">
+                <a href="{{ password_reset_url }}">{% translate 'Forgotten your password or username?' %}</a>
+            </div>
+            {% endif %}
+
+            <div class="submit-row">
+                <input type="submit" value="Ingresa" class="default" style="background-color: #F8BBD0; color: white;">
+                <input type="hidden" name="next" value="{{ next }}">
+            </div>
+
+            <p class="register-link">No tienes una cuenta? <a href="#">Registrate</a></p>
+        </form>
+    </div>
+</div>
+{% endblock %}
