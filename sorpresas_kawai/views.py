@@ -1,19 +1,40 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
 from .models import Producto
+
+
+def login_view(request):
+    """
+    Login custom que autentica contra Django y permite acceso al admin
+    """
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect("/admin/")  # 🔥 entra directo al admin
+        else:
+            return render(
+                request,
+                "admin/logintest.html",
+                {"error": "Usuario o contraseña incorrectos"}
+            )
+
+    return render(request, "admin/logintest.html")
 
 
 def lista_productos(request):
     """
     Vista que recupera todos los productos y los pasa a la plantilla.
     """
-    # 1. Recuperar datos: Obtiene todos los objetos Producto de la base de datos
-    productos = Producto.objects.all().filter(activo=True).order_by('nombre')
+    productos = Producto.objects.filter(activo=True).order_by("nombre")
 
-    # 2. Definir el contexto: Es el diccionario que enviará los datos a la plantilla
     contexto = {
-        'productos': productos,
-        'titulo': 'Nuestra Colección de Productos'
+        "productos": productos,
+        "titulo": "Nuestra Colección de Productos"
     }
 
-    # 3. Renderizar: Retorna una respuesta HTML usando la plantilla 'productos/lista.html'
-    return render(request, 'productos/lista.html', contexto)
+    return render(request, "productos/lista.html", contexto)
