@@ -4,6 +4,14 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Producto
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('/login/')
 
 
 def login_view(request):
@@ -66,7 +74,7 @@ def register_view(request):
     # GET request
     return render(request, 'admin/register.html')
 
-@login_required(login_url='login')
+#@login_required(login_url='login')
 def inicio(request):
     return render(request, 'inicio.html')
 
