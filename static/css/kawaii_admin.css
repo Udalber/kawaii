@@ -115,3 +115,167 @@ body {
     margin: 0;
 }
 
+/*.modal-bg {
+    display: none; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: #fff0f5;
+    border-radius: 12px;
+    padding: 30px 40px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    width: 300px;
+    font-family: 'Arial', sans-serif;
+}
+
+.modal h2 {
+    color: #ff69b4;
+}
+
+.modal button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #ff69b4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.modal button:hover {
+    background: #ff85c1;
+}
+/*
+/* Modal fondo */
+.modal-bg {
+    display: none; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Modal ventana */
+.modal {
+    background: #fff0f5;
+    border-radius: 12px;
+    padding: 30px 40px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    width: 320px;
+    font-family: 'Arial', sans-serif;
+    animation: scaleUp 0.3s ease;
+}
+
+.modal h2 {
+    color: #ff69b4;
+}
+
+.modal p {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.modal button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #ff69b4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.modal button:hover {
+    background: #ff85c1;
+}
+
+@keyframes scaleUp {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.hero-card {
+            background-color: #fce4ec; /* Un rosa muy claro */
+            border-radius: 20px;
+            padding: 40px;
+            margin: 60px auto;
+            width: 90%;
+            max-width: 900px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+
+            /* **IMPORTANTE:** Necesitas una imagen de fondo para este efecto */
+            /* Asumo que la imagen está en static/img/hero_bg_kawaii.jpg */
+            background-image: url('{% static "img/hero_bg_kawaii.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-content {
+            /* Fondo semitransparente para que el texto se lea mejor sobre la imagen */
+            background: rgba(255, 255, 255, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .hero-title {
+            font-size: 2.5em;
+            color: #e94fa3;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .hero-subtitle {
+            color: #333;
+            font-size: 1em;
+            margin-bottom: 25px;
+            max-width: 550px;
+        }
+
+        .button-group a {
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 0 10px;
+            transition: background-color 0.2s;
+            display: inline-block;
+        }
+
+        .button-group .btn-productos {
+            background-color: #e94fa3;
+            color: white;
+        }
+
+        .button-group .btn-combos {
+            background-color: #fef0f7;
+            color: #e94fa3;
+            border: 1px solid #e94fa3;
+        }
+
+        .button-group .btn-productos:hover { background-color: #d63a8f; }
+        .button-group .btn-combos:hover { background-color: #f9d8e7; }
