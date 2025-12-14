@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ titulo }}</title>
+</head>
+<body>
+    <h1>{{ titulo }}</h1>
+
+    {% if productos %}
+        <div class="lista-productos">
+            {% for producto in productos %}
+                <div class="producto">
+                    <h2>{{ producto.nombre }}</h2>
+                    <p>{{ producto.descripcion }}</p>
+                    <p><strong>Precio:</strong> ${{ producto.valor_unitario|floatformat:2 }}</p>
+                    <p><strong>Stock:</strong> {{ producto.stock }} unidades</p>
+                    {% if producto.id_categoria %}
+                        <p><strong>Categoría:</strong> {{ producto.id_categoria.nombre }}</p>
+                    {% else %}
+                        <p><strong>Categoría:</strong> Sin Categoría</p>
+                    {% endif %}
+
+                    {% if producto.imagen_url %}
+                        <img src="{{ producto.imagen_url }}" alt="Imagen de {{ producto.nombre }}" style="max-width: 150px;">
+                    {% endif %}
+                </div>
+                <hr>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No hay productos activos para mostrar.</p>
+    {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+# -----------------------------------------------------------------------------
+# Ignorar Archivos y Carpetas Generados por el Proyecto
+# -----------------------------------------------------------------------------
+
+# Archivos de Python Bytecode
+*.py[cod]
+__pycache__/
+
+# Directorio de Migraciones (si está vacío, Python lo recreará)
+# A menudo, se incluyen para que la base de datos se pueda migrar
+# pero si quieres ignorar los archivos .py dentro:
+# */migrations/*.py
+
+# Base de Datos SQLite (contiene datos sensibles/locales)
+# Esto es esencial para desarrollo local
+# *.sqlite3 Se comenta con fines de no
+# db.sqlite3 retrasar a nadie en el desarrollo
+
+# Archivos de Sesión
+*.session
+
+# Archivos de Pruebas y Reportes de Cobertura
+.coverage
+htmlcov/
+
+# Logs
+*.log
+log.txt
+
+
+# -----------------------------------------------------------------------------
+# Entorno Virtual y Dependencias
+# -----------------------------------------------------------------------------
+
+# Directorio del Entorno Virtual (típico nombre)
+venv/
+env/
+
+# Directorios de Python creados por pip, conda, etc.
+bin/
+include/
+lib/
+local/
+share/
+
+
+# -----------------------------------------------------------------------------
+# Archivos de Configuración de Entorno Local (¡CRÍTICO!)
+# -----------------------------------------------------------------------------
+
+# Archivos que contienen información sensible (claves secretas, contraseñas)
+# Si usas django-environ o similar, esto es vital.
+.env
+.flaskenv
+settings_local.py
+config.ini
+config.json
+
+
+# -----------------------------------------------------------------------------
+# Archivos Estáticos y de Medios de Usuario (Media/Static)
+# -----------------------------------------------------------------------------
+
+# Archivos estáticos recolectados (STATIC_ROOT)
+# Se regeneran con `python manage.py collectstatic`
+/static_cdn/
+/staticfiles/
+staticfiles/
+
+# Archivos multimedia subidos por los usuarios (MEDIA_ROOT)
+# Estos son grandes y específicos del entorno.
+/media/
+
+
+# -----------------------------------------------------------------------------
+# Herramientas de Desarrollo y IDEs
+# -----------------------------------------------------------------------------
+
+# JetBrains IDEs (PyCharm, WebStorm, etc.)
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio Code
+.vscode/
+
+# Editor Vim/Emacs Swap Files
+*~
+*.swp
+
+# macOS files
+.DS_Store
+
+# -----------------------------------------------------------------------------
+# Herramientas de Build/Distribución
+# -----------------------------------------------------------------------------
+
+# Paquetes de Python (distribución)
+dist/
+build/
+*.egg-info/
