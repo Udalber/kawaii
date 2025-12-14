@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorpresas Kawaii | {% block title %}{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        /* CSS BÁSICO PARA LA CABECERA (IDEALMENTE MOVER A style.css) */
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #fcf6fc; color: #222; }
+        .navbar-container {
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            padding: 10px 0;
+        }
+        .navbar {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        .brand a {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-decoration: none;
+            color: #222; /* Color oscuro */
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #222;
+            margin-left: 25px;
+            font-weight: 500;
+        }
+        .nav-icons span, .nav-icons a {
+            margin-left: 15px;
+            padding: 8px;
+            border-radius: 50%;
+            background-color: #f0e6f0; /* Fondo claro para los iconos */
+            color: #222;
+            text-decoration: none;
+            font-size: 1.1em;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="navbar-container">
+        <nav class="navbar">
+            <div class="brand">
+                <a href="{% url 'lista_productos' %}">
+                    <span style="margin-right: 5px;">&#9883;</span> Sorpresas Kawaii
+                </a>
+            </div>
+
+            <div class="nav-links">
+                <a href="{% url 'lista_productos' %}">Productos</a>
+
+                <a href="{% url 'ver_carrito' %}">Carrito</a>
+
+                <a href="#">Combos</a>
+                <a href="#">Sobre Nosotros</a>
+            </div>
+
+            <div class="nav-icons">
+                <a href="#" aria-label="Buscar">&#128269;</a>
+                <a href="#" aria-label="Menú/Usuario">&#9993;</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="content-container">
+        {% block content %}
+        {% endblock content %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

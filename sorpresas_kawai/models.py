@@ -52,7 +52,7 @@ class Producto(models.Model):
     descripcion = models.TextField(blank=True, null=True)
     valor_unitario = models.FloatField()
     stock = models.IntegerField(default=0)
-    imagen_url = models.URLField(max_length=500, blank=True, null=True)
+    imagen_url = models.URLField(max_length=700, blank=True, null=True)
     activo = models.BooleanField(default=True)
 
     class Meta:
@@ -197,3 +197,39 @@ class DetallePedido(models.Model):
         item_nombre = self.producto.nombre if self.producto else (
             f"Combo {self.combo.id}" if self.combo else "Ítem Desconocido")
         return f"{self.cantidad} x {item_nombre} en Pedido {self.pedido.id}"
+
+
+class CarritoDeCompras(models.Model):
+    """
+    Representa el carrito de compras de un usuario.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    usuario = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='carrito'
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Carrito de {self.usuario.username}"
+
+
+class ItemCarrito(models.Model):
+    """
+    Representa un producto específico dentro de un carrito.
+    """
+    carrito = models.ForeignKey(
+        CarritoDeCompras,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE
+    )
+    cantidad = models.IntegerField(default=1)
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre}"
