@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.db import transaction, IntegrityError
 from django.db.models import Count
-from .models import Producto, Categoria, CarritoDeCompras, ItemCarrito, Pedido, DetallePedido
+from .models import (Categoria, Pedido,
+                     DetallePedido, Combo, CarritoDeCompras, ItemCarrito)
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -180,68 +181,43 @@ def inicio(request):
 
 @login_required
 def finalizar_compra(request):
-    # Aseguramos que la acción solo se ejecute al presionar el botón (método POST)
     if request.method == 'POST':
         try:
-            # Usamos una transacción atómica para asegurar que todas las operaciones se completen
-            # o que ninguna se ejecute (si falla algo en el medio).
             with transaction.atomic():
-                # 1. Recuperar el Carrito y sus Ítems
                 carrito = get_object_or_404(CarritoDeCompras, usuario=request.user)
                 items_carrito = ItemCarrito.objects.filter(carrito=carrito).select_related('producto')
 
                 if not items_carrito.exists():
-                    # Si el carrito está vacío, no se puede finalizar la compra
                     return redirect('ver_carrito')
-
-                    # 2. Calcular el valor total del pedido (Subtotal + Envío fijo, como en ver_carrito)
                 subtotal = 0
                 for item in items_carrito:
                     subtotal += item.cantidad * item.producto.valor_unitario
 
-                # Definir valores fijos para el ejemplo
                 costo_envio = 5.00
                 valor_total_pagado = subtotal + costo_envio
 
-                # 3. Crear el nuevo Pedido
                 nuevo_pedido = Pedido.objects.create(
                     id_usuario=request.user,
                     valor_pagado=valor_total_pagado,
-                    estado='PAGADO',  # Asumimos pago inmediato para este ejemplo
-                    metodo_pago='Efectivo/Prueba',  # Define el método de pago
-                    # is_combo, combo_opcional, id_producto_opcional se dejan por defecto (False/None)
-                    # ya que estamos comprando desde la lista normal de productos.
+                    estado='PAGADO',
+                    metodo_pago='Efectivo/Prueba',
                 )
-
-                # 4. Mover Ítems del Carrito al DetallePedido
                 for item in items_carrito:
                     DetallePedido.objects.create(
                         pedido=nuevo_pedido,
                         producto=item.producto,
                         cantidad=item.cantidad,
-                        # Usamos el precio unitario actual del producto para el historial
                         precio_item=item.producto.valor_unitario
                     )
-
-                    # Opcional: Descontar stock (si lo necesitas)
-                    # item.producto.stock -= item.cantidad
-                    # item.producto.save()
-
-                # 5. Vaciar el Carrito (Eliminar todos los ItemCarrito)
                 items_carrito.delete()
-
-                # Opcional: Puedes redirigir a una página de confirmación de pedido
                 return redirect('pagina_confirmacion', pedido_id=nuevo_pedido.id)
 
         except CarritoDeCompras.DoesNotExist:
-            # El usuario no tiene un carrito para finalizar
             return redirect('lista_productos')
         except IntegrityError:
-            # Manejar errores de la base de datos (por ejemplo, si el stock es negativo, etc.)
-            # Aquí podrías añadir lógica de logs o mensajes de error al usuario.
             return render(request, 'error_transaccion.html', {'mensaje': 'Ocurrió un error al procesar el pedido.'})
 
-    return redirect('ver_carrito')  # Si alguien intenta acceder por GET, lo mandamos al carrito
+    return redirect('ver_carrito')
 
 
 @login_required
@@ -251,3 +227,64 @@ def pagina_confirmacion(request, pedido_id):
         'pedido': pedido
     }
     return render(request, 'pedido/confirmacion.html', contexto)
+
+
+@login_required
+def lista_combos(request):
+    combos = Combo.objects.filter(activo=True)
+    combos_en_carrito = {}
+    combo_images = {}
+
+    for combo in combos:
+        combo.imagen_url = combo_images.get(str(combo.id), 'https://i.postimg.cc/zvvRGnSw/66cec053-1a4e-4a41-b122-023f986f1c95.jpg')
+
+        productos_lista = [
+            f"{cp.cantidad}x {cp.producto.nombre}"
+            for cp in combo.combosproductos_set.all()
+        ]
+        combo.descripcion_productos = ", ".join(productos_lista)
+
+    contexto = {
+        "combos": combos,
+        "titulo": "Combos Disponibles",
+        "combos_en_carrito": combos_en_carrito,
+    }
+
+    return render(request, "productos/combos.html", contexto)
+
+
+def _manejar_item_carrito(request, combo_id, action='add'):
+    if request.method != 'POST':
+        return redirect('lista_combos')
+
+    combo = get_object_or_404(Combo, id=combo_id)
+    carrito, creado = CarritoDeCompras.objects.get_or_create(usuario=request.user)
+
+    item_carrito, item_creado = ItemCarrito.objects.get_or_create(
+        carrito=carrito,
+        combo=combo,
+        producto=None,
+        defaults={'cantidad': 0}
+    )
+
+    if action == 'add':
+        item_carrito.cantidad += 1
+        item_carrito.save()
+
+    elif action == 'remove':
+        if item_carrito.cantidad > 1:
+            item_carrito.cantidad -= 1
+            item_carrito.save()
+        elif item_carrito.cantidad == 1:
+            item_carrito.delete()
+
+    return redirect(request.META.get('HTTP_REFERER', 'lista_combos'))
+
+@login_required
+def agregar_combo_a_carrito(request, combo_id):
+    return _manejar_item_carrito(request, combo_id, action='add')
+
+
+@login_required
+def quitar_combo_de_carrito(request, combo_id):
+    return _manejar_item_carrito(request, combo_id, action='remove')

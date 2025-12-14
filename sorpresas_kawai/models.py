@@ -68,13 +68,12 @@ class Combo(models.Model):
     Corresponde a la entidad 'Combos'.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
+    nombre = models.CharField(max_length=255, default="Combo", null=True)
     productos = models.ManyToManyField(
         Producto,
         through='CombosProductos',
         related_name='combos'
     )
-
     usuario_id = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -82,7 +81,6 @@ class Combo(models.Model):
         null=True,
         blank=True
     )
-
     numero_productos = models.IntegerField(default=0)
     descuento_porcentaje = models.FloatField(default=0.0)
     valor_combo = models.FloatField()
@@ -105,7 +103,6 @@ class CombosProductos(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     combo = models.ForeignKey(Combo, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-
     cantidad = models.PositiveSmallIntegerField(default=1)
 
     class Meta:
@@ -226,7 +223,15 @@ class ItemCarrito(models.Model):
     )
     producto = models.ForeignKey(
         Producto,
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    combo = models.ForeignKey(
+        Combo,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
     cantidad = models.IntegerField(default=1)
     fecha_agregado = models.DateTimeField(auto_now_add=True)
