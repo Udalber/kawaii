@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Pedido Confirmado{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 50px auto; text-align: center; padding: 20px; background: white; border-radius: 10px;">
+    <h2>¡Gracias por tu compra!</h2>
+    <p>Tu pedido **{{ pedido.id }}** ha sido procesado exitosamente.</p>
+    <p>El total pagado fue de **${{ pedido.valor_pagado|floatformat:2 }}** y actualmente está en estado **{{ pedido.estado }}**.</p>
+    <p style="margin-top: 30px;"><a href="{% url 'lista_productos' %}">Seguir comprando</a></p>
+</div>
+{% endblock content %}
