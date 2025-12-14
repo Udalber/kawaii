@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Carrito de Compras{% endblock %}
+
+{% block content %}
+<style>
+    /* CSS ESPECÍFICO DEL CARRITO */
+    .carrito-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    h1 {
+        font-size: 2.5em;
+        margin-bottom: 30px;
+        color: #222;
+    }
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .item-details {
+        display: flex;
+        align-items: center;
+    }
+    .item-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        background-color: #f0e6f0; /* Color de fondo claro como en el diseño */
+        margin-right: 15px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .item-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+    }
+    .item-info p {
+        margin: 0;
+        line-height: 1.4;
+    }
+    .item-info .name {
+        font-weight: bold;
+        color: #222;
+    }
+    .item-info .description {
+        font-size: 0.9em;
+        color: #666;
+    }
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+    }
+    .qty-button {
+        background-color: #f0e6f0;
+        color: #d12e8b;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        font-size: 1.2em;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin: 0 5px;
+    }
+    .qty-button:hover {
+        background-color: #f5cff5;
+    }
+    .quantity {
+        font-weight: bold;
+        color: #d12e8b;
+    }
+
+    /* Sección de Resumen */
+    .resumen {
+        margin-top: 40px;
+    }
+    .resumen h2 {
+        font-size: 1.8em;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .resumen-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    .resumen-total {
+        font-weight: bold;
+        border-top: 1px solid #eee;
+        padding-top: 10px;
+        margin-top: 15px;
+    }
+    .finalizar-compra {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        background-color: #d12e8b;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 30px;
+        transition: background-color 0.2s;
+    }
+    .finalizar-compra:hover {
+        background-color: #b9277c;
+    }
+</style>
+
+<div class="carrito-container">
+    <h1>Carrito de Compras</h1>
+
+    {% if items %}
+        {% for item in items %}
+        <div class="item-row">
+            <div class="item-details">
+                <div class="item-image">
+                    {% if item.producto.imagen %}
+                    <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" />
+                    {% elif item.producto.imagen_url %}
+                    <img src="{{ item.producto.imagen_url }}" alt="{{ item.producto.nombre }}" />
+                    {% endif %}
+                </div>
+                <div class="item-info">
+                    <p class="name">{{ item.producto.nombre }}</p>
+                    <p class="description">{{ item.producto.descripcion|truncatechars:40 }}</p>
+                </div>
+            </div>
+
+            <div class="quantity-controls">
+                <form method="post" action="{% url 'quitar_de_carrito' item.producto.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="qty-button">&minus;</button>
+                </form>
+
+                <span class="quantity">{{ item.cantidad }}</span>
+
+                <form method="post" action="{% url 'agregar_a_carrito' item.producto.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="qty-button">&#43;</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="resumen">
+            <h2>Resumen</h2>
+
+            <div class="resumen-row">
+                <span>Subtotal</span>
+                <span>${{ subtotal|floatformat:2 }}</span>
+            </div>
+
+            <div class="resumen-row">
+                <span>Envío</span>
+                <span>${{ costo_envio|floatformat:2 }}</span>
+            </div>
+
+            <div class="resumen-total resumen-row">
+                <span>Total</span>
+                <span>${{ total|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <button class="finalizar-compra">
+            Finalizar Compra
+        </button>
+
+    {% else %}
+        <p>Tu carrito está vacío. ¡Añade algunos productos!</p>
+        <a href="{% url 'lista_productos' %}">Volver a la tienda</a>
+    {% endif %}
+
+</div>
+{% endblock content %}
