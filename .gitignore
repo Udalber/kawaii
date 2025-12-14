@@ -13,8 +13,8 @@ __pycache__/
 
 # Base de Datos SQLite (contiene datos sensibles/locales)
 # Esto es esencial para desarrollo local
-# *.sqlite3 Se comenta con fines de no
-# db.sqlite3 retrasar a nadie en el desarrollo
+*.sqlite3
+db.sqlite3
 
 # Archivos de Sesión
 *.session
