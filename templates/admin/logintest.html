@@ -1,67 +1,59 @@
-{% extends "admin/base_site.html" %}
-{% load i18n static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Sorpresas Kawaii</title>
 
-{% block extrastyle %}
-<link rel="stylesheet" type="text/css" href="{% static 'css/kawaii_admin.css' %}">
-{% endblock %}
+    {% load static %}
 
-{% block bodyclass %}{{ block.super }} login{% endblock %}
+    <link rel="stylesheet" href="{% static 'css/kawaii_admin.css' %}">
+</head>
+<body>
 
-{% block usertools %}{% endblock %}
-{% block nav-global %}{% endblock %}
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="logo">✿ Sorpresas Kawaii</div>
+        <nav>
+            <a href="#">Productos</a>
+            <a href="#">Combos</a>
+            <a href="#">Sobre Nosotros</a>
+        </nav>
+    </header>
 
-{% block content_title %}{% endblock %}
+    <!-- Login -->
+    <main class="login-container">
+        <h1>Bienvenido</h1>
+        {% if error %}
+<p style="color:#d33; font-size:14px;">{{ error }}</p>
+{% endif %}
 
-{% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">Sorpresas Kawaii</a></h1>
-<div class="nav-links">
-    <a href="#">Productos</a>
-    <a href="#">Combos</a>
-    <a href="#">Sobre Nosotros</a>
-</div>
-{% endblock %}
+    <form class="login-form" method="POST">
+        {% csrf_token %}
 
-{% block content %}
-<div id="content-main">
-    <div class="login-wrapper">
-        <h2>Bienvenido</h2>
+   <input type="text" name="username" placeholder="Usuario" required>
 
-        {% if form.errors and not form.non_field_errors %}
-        <p class="errornote">
-        {% if form.errors.items|length == 1 %}{% translate "Please enter your username and password." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
-        </p>
-        {% endif %}
-
-        {% if form.non_field_errors %}
-            {% for error in form.non_field_errors %}
-            <p class="errornote">
-                {{ error }}
-            </p>
-            {% endfor %}
-        {% endif %}
-
-        <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
-            <div class="form-row">
-                <input type="email" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" placeholder="Correo Electronico" autofocus required>
-            </div>
-            <div class="form-row">
-                <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" placeholder="Contraseña" required>
-            </div>
-
-            {% url 'admin:password_reset' as password_reset_url %}
-            {% if password_reset_url %}
-            <div class="password-reset-link">
-                <a href="{{ password_reset_url }}">{% translate 'Forgotten your password or username?' %}</a>
-            </div>
-            {% endif %}
-
-            <div class="submit-row">
-                <input type="submit" value="Ingresa" class="default" style="background-color: #F8BBD0; color: white;">
-                <input type="hidden" name="next" value="{{ next }}">
-            </div>
-
-            <p class="register-link">No tienes una cuenta? <a href="#">Registrate</a></p>
-        </form>
+    <div class="password-container">
+        <input type="password" name="password" id="password" placeholder="Contraseña" required>
+        <span class="toggle-password" onclick="togglePassword()">👁</span>
     </div>
-</div>
-{% endblock %}
+
+    
+
+    <button type="submit">Ingresar</button>
+
+</form>
+
+
+        <p class="register-text">
+            ¿No tienes una cuenta?
+            <a href="#">Regístrate</a>
+        </p>
+    </main>
+<script>
+    function togglePassword() {
+        const password = document.getElementById("password");
+        password.type = password.type === "password" ? "text" : "password";
+    }
+</script>
+</body>
+</html>

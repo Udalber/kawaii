@@ -1,133 +1,117 @@
-/* --- Colores de Referencia --- */
-:root {
-    --color-primary: #F8BBD0; /* Rosa claro/Kawaii */
-    --color-text: #333333;
-    --color-background: #FFFFFF;
-    --color-input-bg: #FCE4EC; /* Rosa muy claro para campos */
-    --color-link: #C2185B;
-}
-
-/* --- Reset y Estilos Generales --- */
 body {
-    background-color: var(--color-background) !important;
-    font-family: sans-serif;
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #fffafa;
+    color: #333;
 }
 
-/* --- Encabezado / Branding (Sorpresas Kawaii) --- */
-#header {
-    background: var(--color-background);
-    color: var(--color-text);
-    height: 40px; /* Ajuste para el tamaño de la imagen */
-    padding: 10px 20px;
-    border-bottom: 1px solid #EEEEEE;
+/* NAVBAR */
+.navbar {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    padding: 20px 40px;
+    background-color: #fff;
 }
 
-#branding a:link, #branding a:visited {
-    color: var(--color-text);
-    font-size: 1.2em;
+.navbar .logo {
     font-weight: bold;
-    text-decoration: none;
 }
 
-#branding {
-    display: flex;
-    align-items: center;
-    gap: 40px; /* Espacio entre el logo y los links */
-}
-
-.nav-links a {
-    color: var(--color-text);
-    text-decoration: none;
+.navbar nav a {
     margin-left: 20px;
-    font-size: 0.9em;
+    text-decoration: none;
+    color: #333;
 }
 
-/* --- Contenido Principal (Login) --- */
-#content-main {
+/* LOGIN */
+.login-container {
+    margin-top: 80px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    min-height: calc(100vh - 60px); /* Ocupa el resto de la pantalla */
-    padding: 0;
 }
 
-.login-wrapper {
-    width: 100%;
-    max-width: 450px; /* Ancho máximo similar al del diseño */
-    padding: 40px;
-    text-align: center;
-}
-
-.login-wrapper h2 {
-    font-size: 2em;
-    font-weight: normal;
+.login-container h1 {
     margin-bottom: 30px;
 }
 
-/* --- Formularios y Campos de Entrada --- */
-#login-form .form-row {
+.login-form {
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-form input {
+    padding: 14px;
     margin-bottom: 15px;
-}
-
-#login-form input[type="email"],
-#login-form input[type="password"] {
-    width: 100%;
-    padding: 15px 10px;
+    border-radius: 10px;
     border: none;
-    background-color: var(--color-input-bg);
-    border-radius: 5px; /* Bordes redondeados sutiles */
-    box-sizing: border-box;
-    color: var(--color-text);
-    font-size: 1em;
+    background-color: #f7e9ef;
 }
 
-/* Placeholder customizado (simulando etiqueta en el diseño) */
-#login-form input::placeholder {
-    color: #9C27B0; /* Un color más oscuro para el texto del placeholder */
-    opacity: 0.8;
-}
-
-/* --- Botón de Ingreso --- */
-.submit-row {
-    text-align: center;
-    margin-top: 25px;
-}
-
-.submit-row input[type="submit"] {
-    background-color: var(--color-primary) !important;
-    color: white !important;
-    padding: 12px 60px; /* Botón más ancho */
+.login-form button {
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 20px;
     border: none;
-    border-radius: 25px; /* Botón con bordes muy redondeados (cápsula) */
-    font-size: 1.1em;
+    background-color: #e94fa3;
+    color: white;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s;
 }
 
-.submit-row input[type="submit"]:hover {
-    background-color: #EC407A !important;
+.login-form button:hover {
+    background-color: #d63a8f;
 }
 
-/* --- Enlace de Registro --- */
-.register-link {
-    margin-top: 30px;
-    font-size: 0.9em;
-    color: #999999;
+.register {
+    margin-top: 20px;
+    font-size: 14px;
 }
 
-.register-link a {
-    color: var(--color-link);
+.register a {
+    color: #e94fa3;
     text-decoration: none;
 }
 
-/* Ocultar elementos no deseados de la plantilla base de Django Admin */
-#content-main h1 { display: none; }
-#content-main .breadcrumbs { display: none; }
-#content-main .module h2 { display: none; }
-#content-main .submit-row .default { float: none; margin: 0 auto; }
-.errornote { text-align: left; }
-.password-reset-link { display: none; } /* Ocultamos el enlace de olvido de contraseña por simplicidad, puedes reubicarlo si lo necesitas */
+.login-form input {
+    width: 100%;
+    padding: 14px 45px 14px 14px;
+    border-radius: 12px;
+    border: none;
+    background-color: #f7e9ee;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.password-container {
+    position: relative;
+    width: 100%;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 14px;
+    top: 33%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 20px;
+    opacity: 0.6;
+}
+
+.toggle-password:hover {
+    opacity: 1;
+}
+
+.remember-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 20px;
+    font-size: 14px;
+}
+
+.remember-container input[type="checkbox"] {
+    margin: 0;
+}
+
