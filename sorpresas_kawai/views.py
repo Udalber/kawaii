@@ -123,7 +123,7 @@ def ver_carrito(request):
     items_carrito = []
     subtotal = 0
     total = 0
-    costo_envio = 5.00
+    costo_envio = 5000
 
     try:
         carrito = CarritoDeCompras.objects.get(usuario=request.user)
