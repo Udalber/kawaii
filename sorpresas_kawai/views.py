@@ -1,16 +1,54 @@
+import random
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.db import transaction, IntegrityError
 from django.db.models import Count
-from .models import (Categoria, Pedido,
-                     DetallePedido, Combo, CarritoDeCompras, ItemCarrito)
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Producto
-from django.contrib.auth import logout
-from django.shortcuts import redirect
+from django.contrib.auth.forms import SetPasswordForm
+from django.core.mail import send_mail
+from django.conf import settings
 
+from .models import (
+    Categoria, Producto, Combo, Pedido,
+    DetallePedido, CarritoDeCompras, ItemCarrito
+)
+
+# Etiquetas aleatorias para destacar productos en el inicio
+PRODUCT_BADGES = [
+    {'icon': 'fa-solid fa-fire', 'text': 'Top Venta'},
+    {'icon': 'fa-solid fa-star', 'text': 'Favorito'},
+    {'icon': 'fa-solid fa-sparkles', 'text': 'Especial'},
+    {'icon': 'fa-solid fa-heart', 'text': 'Más Amado'},
+    {'icon': 'fa-solid fa-bolt', 'text': 'Tendencia'},
+    {'icon': 'fa-solid fa-crown', 'text': 'Imperdible'},
+    {'icon': 'fa-solid fa-wand-magic-sparkles', 'text': 'Destacado'},
+]
+
+# Etiquetas aleatorias para destacar combos en el inicio
+COMBO_BADGES = [
+    {'icon': 'fa-solid fa-wand-magic-sparkles', 'text': 'Top Combo'},
+    {'icon': 'fa-solid fa-crown', 'text': 'Combo Estrella'},
+    {'icon': 'fa-solid fa-gift', 'text': 'Super Combo'},
+    {'icon': 'fa-solid fa-gem', 'text': 'Combo Exclusivo'},
+    {'icon': 'fa-solid fa-star', 'text': 'Combo Favorito'},
+]
+
+
+class NuevaContrasenaForm(SetPasswordForm):
+    """Personaliza los campos del restablecimiento de contraseña."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['new_password1'].widget.attrs.update({
+            'placeholder': 'Nueva contraseña',
+            'id': 'new_password1',
+        })
+        self.fields['new_password2'].widget.attrs.update({
+            'placeholder': 'Repetir contraseña',
+            'id': 'new_password2',
+        })
 
 
 def logout_view(request):
@@ -22,15 +60,13 @@ def login_view(request):
     error = None
 
     if request.method == "POST":
-        username = request.POST.get("username")  # corregido para coincidir con el input
+        username = request.POST.get("username")
         password = request.POST.get("password")
 
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
             login(request, user)
-
-            # Redirigir según tipo de usuario
             if user.is_staff:
                 return redirect('/admin/')
             else:
@@ -41,29 +77,48 @@ def login_view(request):
     return render(request, 'admin/logintest.html', {'error': error})
 
 
-@login_required
 def lista_productos(request):
     categoria_slug = request.GET.get('categoria')
-    productos_query = Producto.objects.filter(activo=True).order_by("nombre")
+
+    # Obtener productos activos
+    productos_query = Producto.objects.filter(
+        activo=True
+    ).exclude(
+        id_categoria__nombre__iexact='Sorpresa'
+    ).order_by("nombre")
+
+    # Filtrar por categoría si se seleccionó alguna
     if categoria_slug:
-        productos_query = productos_query.filter(id_categoria__nombre__iexact=categoria_slug)
+        productos_query = productos_query.filter(
+            id_categoria__nombre__iexact=categoria_slug
+        )
+
     productos = productos_query.all()
+
+    # Obtener categorías que tengan productos activos
     categorias = Categoria.objects.filter(
         productos__activo=True
-    ).annotate(num_productos=Count('productos')).order_by(
-        'nombre')
+    ).exclude(
+        nombre__iexact='Sorpresa'
+    ).annotate(
+        num_productos=Count('productos')
+    ).order_by('nombre')
 
+    # Diccionario de productos que están en el carrito
     productos_en_carrito = {}
 
-    try:
-        carrito = CarritoDeCompras.objects.get(usuario=request.user)
-        items = ItemCarrito.objects.filter(carrito=carrito)
-
-        for item in items:
-            productos_en_carrito[item.producto.id] = item.cantidad
-
-    except CarritoDeCompras.DoesNotExist:
-        pass
+    # Solo consultar el carrito si el usuario inició sesión
+    if request.user.is_authenticated:
+        try:
+            carrito = CarritoDeCompras.objects.get(usuario=request.user)
+            items = ItemCarrito.objects.filter(
+                carrito=carrito,
+                producto__isnull=False
+            )
+            for item in items:
+                productos_en_carrito[item.producto.id] = item.cantidad
+        except CarritoDeCompras.DoesNotExist:
+            pass
 
     contexto = {
         "productos": productos,
@@ -73,7 +128,32 @@ def lista_productos(request):
         "productos_en_carrito": productos_en_carrito,
     }
 
-    return render(request, "productos/lista.html", contexto)
+    return render(
+        request,
+        "productos/lista.html",
+        contexto
+    )
+
+
+def lista_sorpresas(request):
+    """Muestra las experiencias de scoop sorpresa disponibles."""
+    scoop_normal = Producto.objects.filter(
+        nombre='Scoop Normal',
+        id_categoria__nombre__iexact='Sorpresa',
+        activo=True,
+    ).first()
+
+    cantidad_en_carrito = 0
+    if request.user.is_authenticated and scoop_normal:
+        cantidad_en_carrito = ItemCarrito.objects.filter(
+            carrito__usuario=request.user,
+            producto=scoop_normal,
+        ).values_list('cantidad', flat=True).first() or 0
+
+    return render(request, 'productos/sorpresas.html', {
+        'scoop_normal': scoop_normal,
+        'cantidad_en_carrito': cantidad_en_carrito,
+    })
 
 
 @login_required
@@ -124,17 +204,27 @@ def ver_carrito(request):
     items_carrito = []
     subtotal = 0
     total = 0
+    monto_minimo_envio_gratis = 60000
     costo_envio = 5000
 
     try:
         carrito = CarritoDeCompras.objects.get(usuario=request.user)
-        items_carrito = ItemCarrito.objects.filter(carrito=carrito).select_related('producto')
+        items_carrito = ItemCarrito.objects.filter(carrito=carrito).select_related('producto', 'combo')
         for item in items_carrito:
-            item.precio_total = item.cantidad * item.producto.valor_unitario
+            item.precio_unitario = (
+                item.producto.precio_final if item.producto else item.combo.precio_final
+            )
+            item.precio_total = item.cantidad * item.precio_unitario
             subtotal += item.precio_total
 
     except CarritoDeCompras.DoesNotExist:
         pass
+
+    envio_gratis = subtotal >= monto_minimo_envio_gratis
+    falta_para_envio_gratis = max(0, monto_minimo_envio_gratis - subtotal)
+
+    if envio_gratis:
+        costo_envio = 0
 
     if subtotal > 0:
         total = subtotal + costo_envio
@@ -145,11 +235,14 @@ def ver_carrito(request):
         'subtotal': subtotal,
         'costo_envio': costo_envio,
         'total': total,
+        'monto_minimo_envio_gratis': monto_minimo_envio_gratis,
+        'falta_para_envio_gratis': falta_para_envio_gratis,
+        'envio_gratis': envio_gratis,
     }
 
     return render(request, 'carrito/detalle.html', contexto)
 
- 
+
 def register_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -171,12 +264,60 @@ def register_view(request):
         # Renderizamos la misma página con la modal activada
         return render(request, 'admin/register.html', {'messages_success': True})
 
-    # GET request
     return render(request, 'admin/register.html')
 
-#@login_required(login_url='login')
+
 def inicio(request):
-    return render(request, 'inicio.html')
+    # Obtener 3 productos activos al azar (excluyendo categoría Sorpresa si existe)
+    productos_query = Producto.objects.filter(activo=True).exclude(
+        id_categoria__nombre__iexact='Sorpresa'
+    )
+    if productos_query.count() < 3:
+        productos_query = Producto.objects.filter(activo=True)
+
+    productos_destacados = list(productos_query.order_by('?')[:3])
+
+    # Asignar etiquetas aleatorias variadas sin repetir a los 3 productos
+    badges_disponibles = PRODUCT_BADGES.copy()
+    random.shuffle(badges_disponibles)
+    for idx, prod in enumerate(productos_destacados):
+        badge = badges_disponibles[idx % len(badges_disponibles)]
+        prod.badge_icon = badge['icon']
+        prod.badge_text = badge['text']
+
+    # Obtener 1 combo activo al azar
+    combos_destacados = list(Combo.objects.filter(activo=True).order_by('?')[:1])
+    if combos_destacados:
+        combo_tag = random.choice(COMBO_BADGES)
+        combos_destacados[0].badge_icon = combo_tag['icon']
+        combos_destacados[0].badge_text = combo_tag['text']
+
+    # Diccionarios para el carrito
+    productos_en_carrito = {}
+    combos_en_carrito = {}
+    if request.user.is_authenticated:
+        try:
+            carrito = CarritoDeCompras.objects.get(usuario=request.user)
+            items = ItemCarrito.objects.filter(carrito=carrito)
+            for item in items:
+                if item.producto:
+                    productos_en_carrito[item.producto.id] = item.cantidad
+                if item.combo:
+                    combos_en_carrito[item.combo.id] = item.cantidad
+        except CarritoDeCompras.DoesNotExist:
+            pass
+
+    contexto = {
+        'productos_destacados': productos_destacados,
+        'combos_destacados': combos_destacados,
+        'productos_en_carrito': productos_en_carrito,
+        'combos_en_carrito': combos_en_carrito,
+    }
+    return render(request, 'Inicio.html', contexto)
+
+
+def sobre_nosotros(request):
+    return render(request, 'sobre_nosotros.html')
 
 
 @login_required
@@ -185,31 +326,74 @@ def finalizar_compra(request):
         try:
             with transaction.atomic():
                 carrito = get_object_or_404(CarritoDeCompras, usuario=request.user)
-                items_carrito = ItemCarrito.objects.filter(carrito=carrito).select_related('producto')
+                items_carrito = ItemCarrito.objects.filter(carrito=carrito).select_related('producto', 'combo')
 
                 if not items_carrito.exists():
                     return redirect('ver_carrito')
                 subtotal = 0
                 for item in items_carrito:
-                    subtotal += item.cantidad * item.producto.valor_unitario
+                    precio_unitario = (
+                        item.producto.precio_final if item.producto else item.combo.precio_final
+                    )
+                    subtotal += item.cantidad * precio_unitario
 
-                costo_envio = 5.00
+                costo_envio = 0 if subtotal >= 60000 else 5000
                 valor_total_pagado = subtotal + costo_envio
 
                 nuevo_pedido = Pedido.objects.create(
                     id_usuario=request.user,
                     valor_pagado=valor_total_pagado,
-                    estado='PAGADO',
+                    estado='PENDIENTE',
                     metodo_pago='Efectivo/Prueba',
                 )
+                items_comprados_info = []
                 for item in items_carrito:
+                    precio_unitario = (
+                        item.producto.precio_final if item.producto else item.combo.precio_final
+                    )
                     DetallePedido.objects.create(
                         pedido=nuevo_pedido,
                         producto=item.producto,
+                        combo=item.combo,
                         cantidad=item.cantidad,
-                        precio_item=item.producto.valor_unitario
+                        precio_item=precio_unitario
                     )
+                    nombre_item = item.producto.nombre if item.producto else (item.combo.nombre if item.combo else 'Ítem')
+                    items_comprados_info.append(f"• {item.cantidad}x {nombre_item} - ${precio_unitario:,.0f} COP c/u")
+
                 items_carrito.delete()
+
+                # Enviar correo de confirmación de compra
+                if request.user.email:
+                    try:
+                        asunto = f"¡Gracias por tu compra en Sorpresas Kawaii! Pedido {nuevo_pedido.codigo_pedido}"
+                        cuerpo_items = "\n".join(items_comprados_info)
+                        costo_envio_str = "Gratis" if costo_envio == 0 else f"${costo_envio:,.0f} COP"
+                        mensaje = (
+                            f"¡Hola {request.user.first_name or request.user.username}!\n\n"
+                            f"Gracias por confiar en nosotros y apoyar a Sorpresas Kawaii. Tu pedido ha sido registrado con éxito.\n\n"
+                            f"DETALLES DE TU PEDIDO {nuevo_pedido.codigo_pedido}:\n"
+                            f"--------------------------------------------------\n"
+                            f"{cuerpo_items}\n\n"
+                            f"Subtotal: ${subtotal:,.0f} COP\n"
+                            f"Costo de Envío: {costo_envio_str}\n"
+                            f"Total a Pagar: ${valor_total_pagado:,.0f} COP\n"
+                            f"Estado del Pedido: Pendiente de Pago\n"
+                            f"--------------------------------------------------\n\n"
+                            f"Puedes consultar el estado y avance de tu pedido en cualquier momento desde la sección 'Mis Pedidos' en nuestra tienda web.\n\n"
+                            f"¡Que tengas un día muy kawaii!\n"
+                            f"El equipo de Sorpresas Kawaii ✨"
+                        )
+                        send_mail(
+                            subject=asunto,
+                            message=mensaje,
+                            from_email=settings.DEFAULT_FROM_EMAIL or 'noreply@sorpresaskawaii.com',
+                            recipient_list=[request.user.email],
+                            fail_silently=True,
+                        )
+                    except Exception:
+                        pass
+
                 return redirect('pagina_confirmacion', pedido_id=nuevo_pedido.id)
 
         except CarritoDeCompras.DoesNotExist:
@@ -221,6 +405,16 @@ def finalizar_compra(request):
 
 
 @login_required
+def mis_pedidos(request):
+    """Muestra el historial de compras del usuario autenticado."""
+    pedidos = Pedido.objects.filter(
+        id_usuario=request.user
+    ).order_by('-fecha_pedido').prefetch_related('detalles__producto', 'detalles__combo')
+
+    return render(request, 'pedido/mis_pedidos.html', {'pedidos': pedidos})
+
+
+@login_required
 def pagina_confirmacion(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id, id_usuario=request.user)
     contexto = {
@@ -229,28 +423,44 @@ def pagina_confirmacion(request, pedido_id):
     return render(request, 'pedido/confirmacion.html', contexto)
 
 
-@login_required
 def lista_combos(request):
-    combos = Combo.objects.filter(activo=True)
+    """Muestra el catálogo de combos disponibles."""
+    combos = Combo.objects.filter(activo=True).order_by('nombre')
+
     combos_en_carrito = {}
-    combo_images = {}
+    if request.user.is_authenticated:
+        try:
+            carrito = CarritoDeCompras.objects.get(usuario=request.user)
+            items = ItemCarrito.objects.filter(
+                carrito=carrito,
+                combo__isnull=False
+            )
+            for item in items:
+                combos_en_carrito[item.combo.id] = item.cantidad
+        except CarritoDeCompras.DoesNotExist:
+            pass
 
     for combo in combos:
-        combo.imagen_url = combo_images.get(str(combo.id), 'https://i.postimg.cc/zvvRGnSw/66cec053-1a4e-4a41-b122-023f986f1c95.jpg')
-
         productos_lista = [
             f"{cp.cantidad}x {cp.producto.nombre}"
             for cp in combo.combosproductos_set.all()
         ]
-        combo.descripcion_productos = ", ".join(productos_lista)
+        if productos_lista:
+            combo.descripcion_productos = ", ".join(productos_lista)
+        else:
+            combo.descripcion_productos = None
 
     contexto = {
         "combos": combos,
-        "titulo": "Combos Disponibles",
+        "titulo": "Nuestra Colección de Combos",
         "combos_en_carrito": combos_en_carrito,
     }
 
-    return render(request, "productos/combos.html", contexto)
+    return render(
+        request,
+        "productos/combos.html",
+        contexto
+    )
 
 
 def _manejar_item_carrito(request, combo_id, action='add'):
@@ -270,15 +480,15 @@ def _manejar_item_carrito(request, combo_id, action='add'):
     if action == 'add':
         item_carrito.cantidad += 1
         item_carrito.save()
-
     elif action == 'remove':
         if item_carrito.cantidad > 1:
             item_carrito.cantidad -= 1
             item_carrito.save()
-        elif item_carrito.cantidad == 1:
+        else:
             item_carrito.delete()
 
     return redirect(request.META.get('HTTP_REFERER', 'lista_combos'))
+
 
 @login_required
 def agregar_combo_a_carrito(request, combo_id):

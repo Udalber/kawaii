@@ -1,53 +1,351 @@
 {% load static %}
+{% load carrito_filters %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
-    <title>Sorpresas Kawaii | Inicio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorpresas Kawaii | Tienda de Papelería y Cajas Sorpresa</title>
+
+    <!-- Fuentes Kawaii -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Quicksand:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+    
+    <!-- Hoja de Estilos Principal del Proyecto -->
     <link rel="stylesheet" href="{% static 'css/kawaii_admin.css' %}">
+</head>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<body class="kawaii-body">
 
-    </head>
-<body>
+    {% include "partials/navbar.html" %}
 
-    <div class="navbar">
-        <div class="logo">Sorpresas Kawaii</div>
-        <nav>
-            
-            <a href="{% url 'inicio' %}">Inicio</a> 
-            
-            <a href="{% url 'lista_productos' %}">Productos</a> 
-            
-            <a href="#">Combos</a>
-            <a href="#">Carrito</a>
-            <a href="#">Sobre Nosotros</a>
+    <main class="main-content">
+        <!-- 1. HERO SECTION (2 COLUMNAS) -->
+        <section class="hero-section">
+            <div class="hero-container">
+                <div class="hero-grid">
+                    <!-- Columna Izquierda: Mensaje y CTAs -->
+                    <div class="hero-text-col">
+                        <div class="hero-badge">
+                            <span class="hero-badge-icon">🌸</span>
+                            <span>Mundo Kawaii &amp; Papelería Creativa</span>
+                        </div>
+                        <h1 class="hero-main-title">
+                            Descubre la magia de los <span class="highlight-pink">detalles kawaii</span> ✨
+                        </h1>
+                        <p class="hero-description">
+                            Encuentra los artículos más tiernos, útiles y adorables para llenar tus días de ternura.
+                            Arma tu colección soñada o déjate sorprender con nuestras cajas y scoops exclusivos
+                            preparados con amor.
+                        </p>
 
-            {% if user.is_authenticated %}
-                <a href="{% url 'inicio' %}">Mi Cuenta</a> 
-                <a href="{% url 'logout' %}">Cerrar Sesión</a>
-            {% else %}
-                <a href="{% url 'login' %}" style="color: #e94fa3; font-weight: bold;">Login</a>
-                <a href="{% url 'register' %}" style="color: #e94fa3;">Registro</a>
-            {% endif %}
-            <a href="#"><i class="fas fa-shopping-cart"></i></a>
-        </nav>
-    </div>
+                        <div class="hero-cta-group">
+                            <a href="{% url 'lista_productos' %}" class="btn-pill btn-pill-primary">
+                                <i class="fa-solid fa-sparkles"></i> Explorar Productos
+                            </a>
+                            <a href="{% url 'lista_sorpresas' %}" class="btn-pill btn-pill-secondary">
+                                <i class="fa-solid fa-gift"></i> Ver Sorpresas
+                            </a>
+                            <a href="{% url 'lista_combos' %}" class="btn-pill btn-pill-soft">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Combos
+                            </a>
+                        </div>
 
-    <div class="hero-card">
-        <div class="hero-content">
-            <h1 class="hero-title">Sorpresas Kawaii</h1>
-            <p class="hero-subtitle">
-                Descubre un mundo de adorables artículos de papelería y cajas sorpresa encantadoras, 
-                seleccionadas con amor y diseñadas para llevar alegría a tu vida diaria.
-            </p>
-            <div class="button-group">
-                <a href="{% url 'lista_productos' %}" class="btn-productos">Productos</a>
-                <a href="#" class="btn-combos">Combos</a>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <span class="stat-number">+100%</span>
+                                <span class="stat-label">Amor y Dedicación</span>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <span class="stat-number">⭐ 5.0</span>
+                                <span class="stat-label">Clientes Felices</span>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <span class="stat-number">📦 Rápido</span>
+                                <span class="stat-label">Envíos Seguros</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Ilustración / Banner Destacado -->
+                    <div class="hero-visual-col">
+                        <div class="hero-image-wrapper">
+                            <img src="{% static 'img/hero_kawaii.jpg' %}" alt="Cajas Sorpresa y Papelería Kawaii"
+                                class="hero-main-img"
+                                onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600';">
+
+                            <!-- Floating decorative cards -->
+                            <div class="floating-badge badge-top">
+                                <span class="floating-icon">🎁</span>
+                                <div class="floating-text">
+                                    <strong>Scoop Sorpresa</strong>
+                                    <small>¡Descubre tus premios!</small>
+                                </div>
+                            </div>
+
+                            <div class="floating-badge badge-bottom">
+                                <span class="floating-icon">✨</span>
+                                <div class="floating-text">
+                                    <strong>100% Original</strong>
+                                    <small>Detalles únicos kawaii</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
+
+        <!-- 2. TIRA DE BENEFICIOS (VALUE PROPS) -->
+        <section class="benefits-section">
+            <div class="benefits-container">
+                <div class="benefits-grid">
+                    <!-- Tarjeta 1 -->
+                    <div class="benefit-card">
+                        <div class="benefit-icon-wrapper icon-pink">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                        <div class="benefit-info">
+                            <h3 class="benefit-title">Empaque con amor</h3>
+                            <p class="benefit-desc">Cada pedido incluye stickers de regalo, aroma dulce y presentación
+                                mágica.</p>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 2 -->
+                    <div class="benefit-card">
+                        <div class="benefit-icon-wrapper icon-purple">
+                            <i class="fa-solid fa-shield-heart"></i>
+                        </div>
+                        <div class="benefit-info">
+                            <h3 class="benefit-title">Envíos protegidos</h3>
+                            <p class="benefit-desc">Protección acolchada y número de rastreo para que todo llegue
+                                impecable.</p>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 3 -->
+                    <div class="benefit-card">
+                        <div class="benefit-icon-wrapper icon-yellow">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+                        <div class="benefit-info">
+                            <h3 class="benefit-title">Atención personalizada</h3>
+                            <p class="benefit-desc">Te asesoramos con cariño vía WhatsApp para armar el regalo ideal.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. SECCIÓN DE DESTACADOS (PRODUCTOS Y COMBOS REALES) -->
+        <section class="featured-section">
+            <div class="featured-container">
+                <div class="section-header">
+                    <span class="section-tag">⭐ Selección Especial</span>
+                    <h2 class="section-title">Los más pedidos de la semana</h2>
+                    <p class="section-subtitle">
+                        Nuestros favoritos que están enamorando a toda la comunidad. ¡No te quedes sin el tuyo!
+                    </p>
+                </div>
+
+                <div class="featured-products-grid">
+                    <!-- 1. PRODUCTOS DESTACADOS REALES -->
+                    {% for producto in productos_destacados %}
+                    <div class="featured-product-card">
+                        <div class="card-badge-tag">
+                            <i class="{{ producto.badge_icon|default:'fa-solid fa-fire' }}"></i> {{ producto.badge_text|default:'Top Venta' }}
+                        </div>
+
+                        <div class="product-thumb">
+                            {% if producto.get_imagen_url %}
+                            <img src="{{ producto.get_imagen_url }}" alt="{{ producto.nombre }}"
+                                onerror="this.onerror=null; this.src='{% static 'img/placeholder.png' %}';">
+                            {% else %}
+                            <img src="{% static 'img/placeholder.png' %}" alt="Producto Kawaii">
+                            {% endif %}
+
+                            {% if producto.descuento_porcentaje and producto.descuento_porcentaje > 0 %}
+                            <span class="badge-discount">-{{ producto.descuento_porcentaje|floatformat:0 }}%</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="product-details">
+                            <span class="product-category-label">
+                                {% if producto.id_categoria %}{{ producto.id_categoria.nombre }}{% else %}Colección
+                                Kawaii{% endif %}
+                            </span>
+                            <h3 class="product-card-title">{{ producto.nombre }}</h3>
+
+                            <div class="product-pricing">
+                                {% if producto.descuento_porcentaje and producto.descuento_porcentaje > 0 %}
+                                <span class="price-old">${{ producto.valor_unitario|floatformat:0 }}</span>
+                                <span class="price-current">${{ producto.precio_final|floatformat:0 }}</span>
+                                {% else %}
+                                <span class="price-current">${{ producto.valor_unitario|floatformat:0 }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="product-action-box">
+                                {% if user.is_authenticated %}
+                                {% with cantidad=productos_en_carrito|get:producto.id %}
+                                {% if cantidad %}
+                                <div class="cart-quantity-control">
+                                    <form method="post" action="{% url 'quitar_de_carrito' producto.id %}"
+                                        class="inline-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-qty btn-qty-minus"
+                                            aria-label="Disminuir">&minus;</button>
+                                    </form>
+                                    <span class="qty-number">{{ cantidad }} en carrito</span>
+                                    <form method="post" action="{% url 'agregar_a_carrito' producto.id %}"
+                                        class="inline-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-qty btn-qty-plus"
+                                            aria-label="Aumentar">&#43;</button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                <form method="post" action="{% url 'agregar_a_carrito' producto.id %}"
+                                    class="full-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-add-cart">
+                                        <i class="fa-solid fa-cart-shopping"></i> Agregar al Carrito
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% endwith %}
+                                {% else %}
+                                <a href="{% url 'login' %}" class="btn-add-cart">
+                                    <i class="fa-solid fa-cart-shopping"></i> Comprar ahora
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- 2. COMBOS DESTACADOS REALES -->
+                    {% for combo in combos_destacados %}
+                    <div class="featured-product-card">
+                        <div class="card-badge-tag"
+                            style="background: linear-gradient(135deg, #a170ff 0%, #8c52ff 100%);">
+                            <i class="{{ combo.badge_icon|default:'fa-solid fa-wand-magic-sparkles' }}"></i> {{ combo.badge_text|default:'Top Combo' }}
+                        </div>
+
+                        <div class="product-thumb">
+                            {% if combo.get_imagen_url %}
+                            <img src="{{ combo.get_imagen_url }}" alt="{{ combo.nombre }}"
+                                onerror="this.onerror=null; this.src='{% static 'img/placeholder.png' %}';">
+                            {% else %}
+                            <img src="{% static 'img/placeholder.png' %}" alt="Combo Kawaii">
+                            {% endif %}
+
+                            {% if combo.descuento_porcentaje and combo.descuento_porcentaje > 0 %}
+                            <span class="badge-discount">-{{ combo.descuento_porcentaje|floatformat:0 }}%</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="product-details">
+                            <span class="product-category-label" style="color: var(--kawaii-purple-main);">Combos
+                                Especiales</span>
+                            <h3 class="product-card-title">{{ combo.nombre }}</h3>
+
+                            <div class="product-pricing">
+                                {% if combo.descuento_porcentaje and combo.descuento_porcentaje > 0 %}
+                                <span class="price-old">${{ combo.valor_combo|floatformat:0 }}</span>
+                                <span class="price-current">${{ combo.precio_final|floatformat:0 }}</span>
+                                {% else %}
+                                <span class="price-current">${{ combo.precio_final|floatformat:0 }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="product-action-box">
+                                {% if user.is_authenticated %}
+                                {% with cantidad=combos_en_carrito|get:combo.id %}
+                                {% if cantidad %}
+                                <div class="cart-quantity-control">
+                                    <form method="post" action="{% url 'quitar_combo_de_carrito' combo.id %}"
+                                        class="inline-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-qty btn-qty-minus"
+                                            aria-label="Disminuir">&minus;</button>
+                                    </form>
+                                    <span class="qty-number">{{ cantidad }} en carrito</span>
+                                    <form method="post" action="{% url 'agregar_combo_a_carrito' combo.id %}"
+                                        class="inline-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-qty btn-qty-plus"
+                                            aria-label="Aumentar">&#43;</button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                <form method="post" action="{% url 'agregar_combo_a_carrito' combo.id %}"
+                                    class="full-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-add-cart">
+                                        <i class="fa-solid fa-cart-shopping"></i> Agregar al Carrito
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% endwith %}
+                                {% else %}
+                                <a href="{% url 'login' %}" class="btn-add-cart">
+                                    <i class="fa-solid fa-cart-shopping"></i> Comprar ahora
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="featured-footer-cta">
+                    <a href="{% url 'lista_productos' %}" class="btn-view-all">
+                        Ver Todo el Catálogo <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. BANNER EXPERIENCIA KAWAII CTA -->
+        <section class="banner-cta-section">
+            <div class="banner-cta-container">
+                <div class="banner-cta-card">
+                    <div class="banner-cta-content">
+                        <span class="banner-pill">💖 Experiencia Única</span>
+                        <h2 class="banner-title">¿Aún no has probado nuestro Scoop Sorpresa?</h2>
+                        <p class="banner-text">
+                            Cada cucharada está cargada de ternura: borradores coleccionables, cintas washi, stickers,
+                            accesorios y muchas sorpresas más.
+                        </p>
+                        <div class="banner-buttons">
+                            <a href="{% url 'lista_sorpresas' %}" class="btn-pill btn-pill-primary">
+                                <i class="fa-solid fa-gift"></i> Quiero mi Scoop Sorpresa
+                            </a>
+                            <a href="https://wa.link/38kfpj" target="_blank" rel="noopener noreferrer"
+                                class="btn-pill btn-pill-soft">
+                                <i class="fa-brands fa-whatsapp"></i> Preguntar por WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    {% include "partials/footer.html" %}
 
 </body>
+
 </html>

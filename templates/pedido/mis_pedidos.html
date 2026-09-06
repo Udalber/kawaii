@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mis Pedidos{% endblock %}
+
+{% block content %}
+<div class="pedidos-container">
+    <div class="pedidos-header">
+        <h1>📦 Mis Pedidos</h1>
+        <p>Consulta el historial y seguimiento de tus compras en Sorpresas Kawaii.</p>
+    </div>
+
+    {% if pedidos %}
+        {% for pedido in pedidos %}
+        <div class="pedido-card">
+            <div class="pedido-card-header">
+                <div class="pedido-meta">
+                    <span class="pedido-id">Pedido {{ pedido.codigo_pedido }}</span>
+                    <span class="pedido-fecha">{{ pedido.fecha_pedido|date:"d M Y, h:i A" }}</span>
+                </div>
+                <div>
+                    <span class="badge-estado estado-{{ pedido.estado }}">
+                        {{ pedido.get_estado_display }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="pedido-items-list">
+                {% for detalle in pedido.detalles.all %}
+                <div class="pedido-item-row">
+                    <div class="pedido-item-info">
+                        {% if detalle.producto and detalle.producto.get_imagen_url %}
+                            <img class="pedido-item-img" src="{{ detalle.producto.get_imagen_url }}" alt="{{ detalle.producto.nombre }}" onerror="this.onerror=null; this.src='{% static 'img/placeholder.png' %}';">
+                        {% elif detalle.combo and detalle.combo.get_imagen_url %}
+                            <img class="pedido-item-img" src="{{ detalle.combo.get_imagen_url }}" alt="{{ detalle.combo.nombre }}" onerror="this.onerror=null; this.src='{% static 'img/placeholder.png' %}';">
+                        {% else %}
+                            <img class="pedido-item-img" src="{% static 'img/placeholder.png' %}" alt="Sin imagen">
+                        {% endif %}
+
+                        <div class="pedido-item-details">
+                            <p class="item-title">
+                                {% if detalle.producto %}
+                                    {{ detalle.producto.nombre }}
+                                {% elif detalle.combo %}
+                                    {{ detalle.combo.nombre }} <span style="font-size: 0.8em; color: var(--kawaii-purple-main);">(Combo)</span>
+                                {% else %}
+                                    Ítem
+                                {% endif %}
+                            </p>
+                            <p class="item-qty">{{ detalle.cantidad }} unidad{{ detalle.cantidad|pluralize:"es" }} &times; ${{ detalle.precio_item|floatformat:0 }}</p>
+                        </div>
+                    </div>
+
+                    <div class="pedido-item-price">
+                        ${% widthratio detalle.precio_item 1 detalle.cantidad %}
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color: var(--kawaii-text-muted); font-size: 0.9em; margin: 0;">Detalle no disponible para este pedido.</p>
+                {% endfor %}
+            </div>
+
+            <div class="pedido-card-footer">
+                <div class="pedido-total-wrap">
+                    Total: <strong>${{ pedido.valor_pagado|floatformat:0 }} COP</strong>
+                </div>
+
+                <div>
+                    {% if pedido.estado == 'ENVIADO' or pedido.estado == 'ENTREGADO' %}
+                        <button class="btn-guia" type="button" onclick="abrirGuia('{{ pedido.codigo_pedido|escapejs }}', '{{ pedido.empresa_envio|default:"Pendiente"|escapejs }}', '{{ pedido.numero_guia|default:"Pendiente"|escapejs }}', '{{ pedido.get_estado_display|escapejs }}')">
+                            🚚 Ver Guía de Envío
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-pedidos">
+            <div style="font-size: 3em; margin-bottom: 10px;">🛍️</div>
+            <h2>Aún no tienes pedidos</h2>
+            <p>Cuando realices una compra, podrás seguir el estado de tus artículos aquí.</p>
+            <a href="{% url 'lista_productos' %}">Explorar Productos</a> | <a href="{% url 'lista_combos' %}">Ver Combos</a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal para ver Guía de Envío -->
+<div id="modalGuia" class="modal-backdrop" onclick="cerrarGuia(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <h3>🚚 Información de Rastreo</h3>
+        <p style="color: var(--kawaii-text-muted); font-size: 0.9em; margin-bottom: 18px;">Detalles de la empresa y número de guía asignados a tu paquete:</p>
+
+        <div class="guia-field">
+            <label>N° de Pedido</label>
+            <span id="modalPedidoId">-</span>
+        </div>
+
+        <div class="guia-field">
+            <label>Empresa de Envío / Transportadora</label>
+            <span id="modalEmpresa">-</span>
+        </div>
+
+        <div class="guia-field">
+            <label>Número de Guía</label>
+            <span id="modalGuiaNum" style="color: var(--kawaii-pink-primary); font-size: 1.2em; letter-spacing: 1px;">-</span>
+        </div>
+
+        <div class="guia-field">
+            <label>Estado del Envío</label>
+            <span id="modalEstado">-</span>
+        </div>
+
+        <button class="modal-close-btn" type="button" onclick="cerrarGuiaDirecto()">Cerrar</button>
+    </div>
+</div>
+
+<script>
+    function abrirGuia(pedidoId, empresa, guia, estado) {
+        document.getElementById('modalPedidoId').innerText = pedidoId;
+        document.getElementById('modalEmpresa').innerText = empresa || 'Por asignar';
+        document.getElementById('modalGuiaNum').innerText = guia || 'En proceso de generación';
+        document.getElementById('modalEstado').innerText = estado || 'Enviado';
+        document.getElementById('modalGuia').style.display = 'flex';
+    }
+
+    function cerrarGuia(e) {
+        if (e.target.id === 'modalGuia') {
+            document.getElementById('modalGuia').style.display = 'none';
+        }
+    }
+
+    function cerrarGuiaDirecto() {
+        document.getElementById('modalGuia').style.display = 'none';
+    }
+</script>
+{% endblock content %}

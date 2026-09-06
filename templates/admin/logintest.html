@@ -1,32 +1,21 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Login | Sorpresas Kawaii</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/kawaii_admin.css' %}">
-</head>
-<body>
+{% extends "base.html" %}
+{% load static %}
 
-<header class="navbar">
-    <div class="logo">✿ Sorpresas Kawaii</div>
-    <nav>
-        <a href="#">Productos</a>
-        <a href="#">Combos</a>
-        <a href="#">Sobre Nosotros</a>
-    </nav>
-</header>
+{% block title %}Iniciar Sesión{% endblock %}
 
+{% block content %}
 <main class="login-container">
-    <h1>Bienvenido</h1>
+    <h1>Bienvenido 🌸</h1>
 
     {% if error %}
-        <p style="color:#d33; font-size:14px;">{{ error }}</p>
+        <div style="background: #fde8e8; color: #c81e1e; padding: 10px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; width: 100%; text-align: center; border: 1px solid #f8b4b4;">
+            {{ error }}
+        </div>
     {% endif %}
 
     <form class="login-form" method="POST">
         {% csrf_token %}
-        <input type="text" name="username" placeholder="Usuario" required>
+        <input type="text" name="username" placeholder="Usuario o Correo" required>
 
         <div class="password-container">
             <input type="password" name="password" id="password" placeholder="Contraseña" required>
@@ -37,8 +26,12 @@
     </form>
 
     <p class="register-text">
+        <a href="{% url 'password_reset' %}">¿Olvidaste tu contraseña?</a>
+    </p>
+
+    <p class="register-text">
         ¿No tienes una cuenta?
-        <a href="{% url 'register' %}">Regístrate</a>
+        <a href="{% url 'register' %}">Regístrate gratis</a>
     </p>
 </main>
 
@@ -48,6 +41,4 @@ function togglePassword() {
     password.type = password.type === "password" ? "text" : "password";
 }
 </script>
-
-</body>
-</html>
+{% endblock content %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sobre Nosotros{% endblock %}
+
+{% block content %}
+<div class="about-wrapper">
+    <section class="about-card">
+        <span class="about-sparkle-top">💖</span>
+        <h1 class="about-title">Sobre <span class="accent">Nosotros</span></h1>
+        
+        <p class="about-text">
+            Somos una tienda creada para compartir detalles bonitos, divertidos y llenos de color. 
+            Creemos que la magia de un regalo está en la sonrisa que genera, por eso seleccionamos 
+            artículos adorables de papelería, peluches y sorpresas pensadas especialmente para ti.
+        </p>
+
+        <div class="about-highlight-box">
+            <p>🌸 En Sorpresas Kawaii reunimos detalles mágicos para hacer cada uno de tus días más especial. ✨</p>
+        </div>
+
+        <h3 class="social-section-title">¡Síguenos y hablemos!</h3>
+        
+        <div class="social-links">
+            <a href="https://wa.link/38kfpj" target="_blank" rel="noopener noreferrer"
+                class="btn-wa-link" aria-label="WhatsApp" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="https://www.tiktok.com/@edukitmosquera?_r=1&_t=ZS-99Uf8YkGpyX" target="_blank" rel="noopener noreferrer"
+                aria-label="TikTok" title="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+            <a href="https://www.instagram.com/edukitmosquera?stkn=MXRuaXZodnozcWFvMQ==" target="_blank" rel="noopener noreferrer"
+                aria-label="Instagram" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        </div>
+
+        <div>
+            <a href="{% url 'inicio' %}" class="btn-return-home">
+                <i class="fa-solid fa-arrow-left"></i> Volver a Inicio
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock content %}

@@ -1,95 +1,13 @@
 {% extends "base.html" %}
 {% load carrito_filters %}
+{% load static %}
 
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-<style>
-    /* Reutiliza los estilos de .container, .product-grid, .product-card, etc.
-       de tu plantilla de productos para mantener la coherencia visual */
-    .combo-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-top: 30px;
-    }
-    .combo-card {
-        /* Usa los mismos estilos que .product-card */
-        background-color: white;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        min-height: 400px;
-    }
-    .combo-image {
-        /* Adaptar estilos de imagen */
-        height: 200px;
-        overflow: hidden;
-        background-color: #f5f5f5;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .combo-image img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
-    .combo-body {
-        padding: 15px;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    .combo-name {
-        font-size: 1.2em;
-        font-weight: bold;
-        margin-bottom: 5px;
-    }
-    .combo-price {
-        color: #d12e8b;
-        font-weight: 700;
-        font-size: 1.1em;
-        margin-bottom: 5px;
-    }
-    .combo-details {
-        font-size: 0.9em;
-        color: #666;
-        margin-bottom: 15px;
-        text-align: left;
-    }
-    .qty-controls {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 1px solid #d12e8b;
-        border-radius: 5px;
-        margin-top: auto;
-    }
-    .qty-controls button {
-        background: none;
-        border: none;
-        font-size: 1.5em;
-        color: #d12e8b;
-        padding: 5px 10px;
-        cursor: pointer;
-    }
-    .add-button {
-        background-color: #d12e8b;
-        color: white;
-        border: none;
-        padding: 10px 0;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: auto;
-    }
-</style>
-
-<div class="container">
-    <div class="header">
+<div class="catalog-container">
+    {% if combos %}
+    <div class="catalog-header">
         <h1>{{ titulo }}</h1>
     </div>
 
@@ -97,44 +15,62 @@
         {% for combo in combos %}
         <div class="combo-card">
             <div class="combo-image">
-                <img src="{{ combo.imagen_url }}" alt="Imagen de {{ combo.imagen_url }}">
-            </div>
-
-            <div class="combo-body">
-                <p class="combo-name">Combo {{ combo.id|truncatechars:8 }}</p>
-                {% if combo.descuento_porcentaje > 0 %}
-                    <p style="color: green; font-weight: bold;">{{ combo.descuento_porcentaje }}% Descuento</p>
+                {% if combo.get_imagen_url %}
+                    <img src="{{ combo.get_imagen_url }}" alt="{{ combo.nombre }}" onerror="this.onerror=null; this.src='{% static 'img/placeholder.png' %}';">
+                {% else %}
+                    <img src="{% static 'img/placeholder.png' %}" alt="Sin imagen">
                 {% endif %}
 
-                <p class="combo-details">
-                    **Incluye:** {{ combo.descripcion_productos }}
-                </p>
+                {% if combo.descuento_porcentaje > 0 %}
+                    <span class="discount-badge">{{ combo.descuento_porcentaje|floatformat:0 }}% OFF</span>
+                {% endif %}
+            </div>
 
-                <p class="combo-price">${{ combo.valor_combo|floatformat:0 }}</p>
+            <div class="combo-card-body">
+                <p class="combo-name">{{ combo.nombre }}</p>
+
+                {% if combo.descripcion %}
+                    <p class="combo-description">{{ combo.descripcion }}</p>
+                {% endif %}
+
+                {% if combo.descripcion_productos %}
+                    <div class="combo-includes">
+                        <strong>Incluye:</strong> {{ combo.descripcion_productos }}
+                    </div>
+                {% endif %}
+
+                <div class="price-container">
+                    {% if combo.descuento_porcentaje > 0 %}
+                        <span class="original-price">${{ combo.valor_combo|floatformat:0 }}</span>
+                        <span class="combo-price">${{ combo.precio_final|floatformat:0 }}</span>
+                    {% else %}
+                        <span class="combo-price">${{ combo.valor_combo|floatformat:0 }}</span>
+                    {% endif %}
+                </div>
 
                 {% with cantidad=combos_en_carrito|get:combo.id %}
-
                     {% if cantidad %}
-                        <div class="qty-controls">
-                            <form method="post" action="{% url 'quitar_combo_de_carrito' combo.id %}" style="margin: 0;">
-                                {% csrf_token %}
-                                <button type="submit">&minus;</button>
-                            </form>
+                        <div>
+                            <div class="qty-controls">
+                                <form method="post" action="{% url 'quitar_combo_de_carrito' combo.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit">&minus;</button>
+                                </form>
 
-                            <span style="font-weight: bold; color: #d12e8b;">{{ cantidad }}</span>
+                                <span class="qty-number">{{ cantidad }}</span>
 
-                            <form method="post" action="{% url 'agregar_combo_a_carrito' combo.id %}" style="margin: 0;">
-                                {% csrf_token %}
-                                <button type="submit">&#43;</button>
-                            </form>
+                                <form method="post" action="{% url 'agregar_combo_a_carrito' combo.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit">&#43;</button>
+                                </form>
+                            </div>
+                            <p class="in-cart-label">En tu carrito</p>
                         </div>
-                        <p style="margin-top: 5px; font-size: 0.9em; color: #666;">En tu carrito</p>
-
                     {% else %}
-                        <form method="post" action="{% url 'agregar_combo_a_carrito' combo.id %}">
+                        <form method="post" action="{% url 'agregar_combo_a_carrito' combo.id %}" style="margin-top: auto;">
                             {% csrf_token %}
-                            <button type="submit" class="add-button">
-                                Añadir Combo
+                            <button type="submit" class="add-to-cart-button" style="background: linear-gradient(135deg, #a170ff 0%, #8c52ff 100%);">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Añadir Combo al Carrito
                             </button>
                         </form>
                     {% endif %}
@@ -142,9 +78,14 @@
 
             </div>
         </div>
-        {% empty %}
-        <p>No hay combos disponibles en este momento.</p>
         {% endfor %}
     </div>
+    {% else %}
+    <section class="empty-catalog">
+        <h1>Combos Disponibles</h1>
+        <p>No hay combos disponibles en este momento.</p>
+        <a href="{% url 'inicio' %}"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+    </section>
+    {% endif %}
 </div>
 {% endblock content %}

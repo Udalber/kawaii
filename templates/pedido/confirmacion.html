@@ -3,10 +3,28 @@
 {% block title %}Pedido Confirmado{% endblock %}
 
 {% block content %}
-<div style="max-width: 600px; margin: 50px auto; text-align: center; padding: 20px; background: white; border-radius: 10px;">
-    <h2>¡Gracias por tu compra!</h2>
-    <p>Tu pedido **{{ pedido.id }}** ha sido procesado exitosamente.</p>
-    <p>El total pagado fue de **${{ pedido.valor_pagado|floatformat:2 }}** y actualmente está en estado **{{ pedido.estado }}**.</p>
-    <p style="margin-top: 30px;"><a href="{% url 'lista_productos' %}">Seguir comprando</a></p>
+<div style="max-width: 650px; margin: 50px auto; text-align: center; padding: 32px 24px; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+    <div style="font-size: 3em; margin-bottom: 10px;">🛍️</div>
+    <h2 style="color: #2c1a2e; margin-top: 0; margin-bottom: 15px;">¡Gracias por tu compra!</h2>
+    <p style="color: #555; font-size: 1.05em; line-height: 1.6;">
+        Tu pedido con código <strong>{{ pedido.codigo_pedido }}</strong> ha sido registrado exitosamente.
+    </p>
+    
+    <div style="background-color: #faf5fa; border: 1px solid #f0e6f0; border-radius: 8px; padding: 18px; margin: 25px auto; max-width: 450px;">
+        <p style="margin: 0 0 10px 0; font-size: 1.1em;">
+            Total: <strong style="color: #d12e8b; font-size: 1.2em;">${{ pedido.valor_pagado|floatformat:0 }}</strong>
+        </p>
+        <p style="margin: 0; font-size: 0.95em; color: #666;">
+            Estado del pedido: 
+            <span style="background-color: #fff3cd; color: #856404; font-weight: bold; padding: 4px 10px; border-radius: 20px; font-size: 0.9em; display: inline-block; margin-left: 5px;">
+                {{ pedido.get_estado_display }}
+            </span>
+        </p>
+    </div>
+
+    <div class="button-group" style="margin-top: 35px; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <a href="{% url 'mis_pedidos' %}" class="btn-productos">Mis Pedidos</a>
+        <a href="{% url 'lista_productos' %}" class="btn-combos">Seguir Comprando</a>
+    </div>
 </div>
 {% endblock content %}
