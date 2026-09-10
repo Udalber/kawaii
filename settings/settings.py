@@ -39,14 +39,22 @@ render_external_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if render_external_hostname and render_external_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_external_hostname)
 
-# Orígenes confiables para CSRF en producción y pruebas
+# Orígenes confiables para CSRF en producción y pruebas por túnel
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
+    'https://*.lhr.life',
+    'http://*.lhr.life',
+    'https://*.localhost.run',
     'https://*.loca.lt',
     'https://*.ngrok-free.app',
+    'https://*.ngrok.app',
+    'https://*.ngrok.io',
+    'https://*.pinggy.link',
+    'https://*.trycloudflare.com',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
+
 
 # Configuraciones de seguridad para entorno de producción
 if not DEBUG:
