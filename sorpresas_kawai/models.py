@@ -1,8 +1,12 @@
 import uuid
+import re
+import urllib.parse
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.conf import settings
 
 User = get_user_model()
+
 
 
 class Categoria(models.Model):
@@ -201,8 +205,94 @@ class Pedido(models.Model):
         clean_hex = str(self.id).replace('-', '').upper()
         return f"#SK-{clean_hex[:6]}"
 
+    def generar_mensaje_whatsapp(self):
+        """
+        Genera el texto preformateado para WhatsApp con el ID del pedido,
+        nombre del cliente, lista de artículos comprados y total.
+        """
+        nombre_cliente = self.id_usuario.first_name or self.id_usuario.username
+        items_lista = []
+
+        for d in self.detalles.all():
+            nombre_item = d.producto.nombre if d.producto else (
+                d.combo.nombre if d.combo else 'Item'
+            )
+            items_lista.append(f"- {d.cantidad}x {nombre_item} (${d.precio_item:,.0f} COP c/u)")
+
+        if not items_lista:
+            if self.combo_opcional:
+                items_lista.append(f"- 1x {self.combo_opcional.nombre}")
+            elif self.id_producto_opcional:
+                items_lista.append(f"- 1x {self.id_producto_opcional.nombre}")
+
+        items_str = "\n".join(items_lista) if items_lista else "- Articulos registrados en el sistema"
+
+        lineas = [
+            "Hola, acabo de realizar una compra en Sorpresas Kawaii.",
+            "",
+            f"*Pedido:* {self.codigo_pedido}",
+            f"*Cliente:* {nombre_cliente}",
+            f"*Total a pagar:* ${self.valor_pagado:,.0f} COP",
+            f"*Estado:* {self.get_estado_display()}",
+            "",
+            "*Articulos incluidos:*",
+            items_str,
+            "",
+            "espero de sus indicaciones para coordinar el pago y envio. Muchas gracias."
+        ]
+        return "\n".join(lineas)
+
+
+    @property
+    def whatsapp_url(self):
+        """
+        Genera el enlace universal de WhatsApp con el número oficial y el mensaje codificado.
+        """
+        phone = getattr(settings, 'WHATSAPP_PHONE_NUMBER', '573222385508')
+        phone_clean = re.sub(r'\D', '', str(phone))
+        mensaje = self.generar_mensaje_whatsapp()
+        return f"https://wa.me/{phone_clean}?text={urllib.parse.quote(mensaje)}"
+
+    def save(self, *args, **kwargs):
+        """
+        Sobrescribe save para detectar cambios en el estado del pedido o información de guía
+        y disparar el correo de notificación al cliente de forma automática.
+        """
+        is_new = self.pk is None
+        old_estado = None
+        old_empresa = None
+        old_guia = None
+
+        if not is_new:
+            prev = Pedido.objects.filter(pk=self.pk).values('estado', 'empresa_envio', 'numero_guia').first()
+            if prev:
+                old_estado = prev.get('estado')
+                old_empresa = prev.get('empresa_envio')
+                old_guia = prev.get('numero_guia')
+
+        super().save(*args, **kwargs)
+
+        if not is_new and old_estado is not None:
+            estado_cambio = old_estado != self.estado
+            guia_cambio = (self.estado in ('ENVIADO', 'ENTREGADO')) and (
+                (bool(self.numero_guia) and self.numero_guia != old_guia) or
+                (bool(self.empresa_envio) and self.empresa_envio != old_empresa)
+            )
+
+            if estado_cambio or guia_cambio:
+                try:
+                    from .emails import enviar_correo_actualizacion_pedido
+                    enviar_correo_actualizacion_pedido(
+                        self,
+                        estado_anterior=old_estado,
+                        info_rastreo_actualizada=guia_cambio and not estado_cambio
+                    )
+                except Exception:
+                    pass
+
     def __str__(self):
         return f"Pedido {self.codigo_pedido} - {self.id_usuario.username}"
+
 
 
 class DetallePedido(models.Model):

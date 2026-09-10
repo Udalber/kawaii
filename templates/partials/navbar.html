@@ -22,7 +22,11 @@
                 <a href="{% url 'ver_carrito' %}" class="btn-nav-action btn-cart" title="Ver Carrito">
                     <i class="fa-solid fa-cart-shopping"></i>
                     <span>Carrito</span>
+                    {% if carrito_total_items > 0 %}
+                        <span class="cart-badge">{{ carrito_total_items }}</span>
+                    {% endif %}
                 </a>
+
                 <a href="{% url 'mis_pedidos' %}" class="btn-nav-action btn-orders" title="Mis Pedidos">
                     <i class="fa-solid fa-box-open"></i>
                     <span>Pedidos</span>

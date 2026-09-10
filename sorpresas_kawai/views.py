@@ -7,6 +7,9 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.core.mail import send_mail
 from django.conf import settings
 
@@ -245,16 +248,34 @@ def ver_carrito(request):
 
 def register_view(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
+        email = request.POST.get('email', '').strip().lower()
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
+
+        if not email or not password1 or not password2:
+            messages.error(request, "Todos los campos son obligatorios.")
+            return render(request, 'admin/register.html')
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, "Por favor ingresa un correo electrónico válido.")
+            return render(request, 'admin/register.html')
 
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden.")
             return render(request, 'admin/register.html')
 
-        if User.objects.filter(username=email).exists():
-            messages.error(request, "El usuario ya existe.")
+        # Validar fortaleza de la contraseña según AUTH_PASSWORD_VALIDATORS configurados
+        try:
+            validate_password(password1)
+        except ValidationError as error:
+            for msg in error.messages:
+                messages.error(request, msg)
+            return render(request, 'admin/register.html')
+
+        if User.objects.filter(username=email).exists() or User.objects.filter(email=email).exists():
+            messages.error(request, "Ya existe un usuario registrado con este correo electrónico.")
             return render(request, 'admin/register.html')
 
         # Crear usuario
@@ -363,36 +384,12 @@ def finalizar_compra(request):
 
                 items_carrito.delete()
 
-                # Enviar correo de confirmación de compra
-                if request.user.email:
-                    try:
-                        asunto = f"¡Gracias por tu compra en Sorpresas Kawaii! Pedido {nuevo_pedido.codigo_pedido}"
-                        cuerpo_items = "\n".join(items_comprados_info)
-                        costo_envio_str = "Gratis" if costo_envio == 0 else f"${costo_envio:,.0f} COP"
-                        mensaje = (
-                            f"¡Hola {request.user.first_name or request.user.username}!\n\n"
-                            f"Gracias por confiar en nosotros y apoyar a Sorpresas Kawaii. Tu pedido ha sido registrado con éxito.\n\n"
-                            f"DETALLES DE TU PEDIDO {nuevo_pedido.codigo_pedido}:\n"
-                            f"--------------------------------------------------\n"
-                            f"{cuerpo_items}\n\n"
-                            f"Subtotal: ${subtotal:,.0f} COP\n"
-                            f"Costo de Envío: {costo_envio_str}\n"
-                            f"Total a Pagar: ${valor_total_pagado:,.0f} COP\n"
-                            f"Estado del Pedido: Pendiente de Pago\n"
-                            f"--------------------------------------------------\n\n"
-                            f"Puedes consultar el estado y avance de tu pedido en cualquier momento desde la sección 'Mis Pedidos' en nuestra tienda web.\n\n"
-                            f"¡Que tengas un día muy kawaii!\n"
-                            f"El equipo de Sorpresas Kawaii ✨"
-                        )
-                        send_mail(
-                            subject=asunto,
-                            message=mensaje,
-                            from_email=settings.DEFAULT_FROM_EMAIL or 'noreply@sorpresaskawaii.com',
-                            recipient_list=[request.user.email],
-                            fail_silently=True,
-                        )
-                    except Exception:
-                        pass
+                # Enviar correo kawaii de confirmación de compra
+                try:
+                    from .emails import enviar_correo_confirmacion_compra
+                    enviar_correo_confirmacion_compra(nuevo_pedido)
+                except Exception:
+                    pass
 
                 return redirect('pagina_confirmacion', pedido_id=nuevo_pedido.id)
 
@@ -416,11 +413,17 @@ def mis_pedidos(request):
 
 @login_required
 def pagina_confirmacion(request, pedido_id):
-    pedido = get_object_or_404(Pedido, id=pedido_id, id_usuario=request.user)
+    pedido = get_object_or_404(
+        Pedido.objects.prefetch_related('detalles__producto', 'detalles__combo'),
+        id=pedido_id,
+        id_usuario=request.user
+    )
     contexto = {
-        'pedido': pedido
+        'pedido': pedido,
+        'detalles': pedido.detalles.all()
     }
     return render(request, 'pedido/confirmacion.html', contexto)
+
 
 
 def lista_combos(request):

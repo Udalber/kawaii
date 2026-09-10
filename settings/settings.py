@@ -21,12 +21,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!o5cu4^q@(tgn^o-4%$3o5o+5cjpnz%dp*55zdj5fj03ia0zd%'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-!o5cu4^q@(tgn^o-4%$3o5o+5cjpnz%dp*55zdj5fj03ia0zd%'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').strip().lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS', '')
+if allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
+else:
+    ALLOWED_HOSTS = ['*'] if DEBUG else ['127.0.0.1', 'localhost']
+
+# Configuraciones de seguridad para entorno de producción
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'True').strip().lower() in ('true', '1', 'yes')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    X_FRAME_OPTIONS = 'DENY'
+
 
 
 # Application definition
@@ -64,7 +84,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
+                'sorpresas_kawai.context_processors.carrito_context',
             ],
+
         },
     },
 ]
@@ -134,3 +156,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('GMAIL_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Configuración de contacto por WhatsApp para confirmación de pedidos
+WHATSAPP_PHONE_NUMBER = os.environ.get('WHATSAPP_PHONE_NUMBER', '573222385508')
+

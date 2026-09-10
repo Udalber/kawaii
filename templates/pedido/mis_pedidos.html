@@ -65,13 +65,20 @@
                     Total: <strong>${{ pedido.valor_pagado|floatformat:0 }} COP</strong>
                 </div>
 
-                <div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    {% if pedido.estado == 'PENDIENTE' %}
+                        <a href="{{ pedido.whatsapp_url }}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-sm" title="Confirmar pedido por WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i> Confirmar en WhatsApp
+                        </a>
+                    {% endif %}
+
                     {% if pedido.estado == 'ENVIADO' or pedido.estado == 'ENTREGADO' %}
                         <button class="btn-guia" type="button" onclick="abrirGuia('{{ pedido.codigo_pedido|escapejs }}', '{{ pedido.empresa_envio|default:"Pendiente"|escapejs }}', '{{ pedido.numero_guia|default:"Pendiente"|escapejs }}', '{{ pedido.get_estado_display|escapejs }}')">
                             🚚 Ver Guía de Envío
                         </button>
                     {% endif %}
                 </div>
+
             </div>
         </div>
         {% endfor %}

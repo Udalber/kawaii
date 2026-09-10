@@ -1,61 +1,64 @@
-# Documentación técnica — Sorpresas Kawaii
+# Documentación Técnica — Sorpresas Kawaii
 
-## 1. Descripción general
+## 1. Descripción General
 
-**Sorpresas Kawaii** es una aplicación web de comercio electrónico desarrollada con Django. Permite a los clientes explorar productos de papelería, combos y scoops/sorpresas, administrar su carrito de compras en tiempo real, finalizar pedidos con selección de método de pago, consultar su historial y seguimiento de pedidos, y recuperar su contraseña mediante correo electrónico.
+**Sorpresas Kawaii** es una plataforma web de comercio electrónico desarrollada con **Django** y diseño visual personalizado con estética pastel y kawaii. Permite a los clientes explorar catálogos de papelería y peluches, combos especiales y scoops/sorpresas, administrar su carrito de compras en tiempo real con contador en la barra de navegación, finalizar y coordinar sus compras directamente por **WhatsApp**, recibir notificaciones automáticas por correo electrónico ante cualquier cambio de estado del pedido (Pagado, Enviado con guía de rastreo, Entregado, Cancelado), consultar su historial de compras en tiempo real y recuperar su contraseña de forma segura.
 
-La aplicación sigue la arquitectura **MVT** (Modelo - Vista - Template) de Django:
+La aplicación sigue la arquitectura estándar **MVT** (Modelo - Vista - Template) de Django:
 
 ```text
 Usuario → URL → Vista → Modelo/Base de datos → Plantilla HTML → Usuario
 ```
 
-- **Modelo:** define las entidades de datos, relaciones y métodos auxiliares.
-- **Vista:** procesa la lógica de negocio, autenticación, transacciones y respuesta HTTP.
-- **Plantilla:** renderiza la interfaz HTML dinámica con diseño responsive y estética kawaii.
+- **Modelo:** Define las entidades de datos, relaciones relacionales, disparadores automáticos de correos y métodos auxiliares de WhatsApp.
+- **Vista:** Procesa la lógica de negocio, autenticación, transacciones atómicas y respuestas HTTP.
+- **Plantilla:** Renderiza la interfaz HTML dinámica y responsive con el sistema de diseño kawaii.
 
 ---
 
-## 2. Tecnologías y herramientas
+## 2. Pila Tecnológica (Tech Stack)
 
-| Área | Tecnología | Uso en el proyecto |
-| --- | --- | --- |
-| **Backend** | Python 3.x | Lógica del servidor y reglas de negocio. |
-| **Framework web** | Django 6.0 | Enrutamiento, vistas, ORM, sesiones, auth, mensajes y panel de administración. |
-| **Base de datos** | SQLite (`db.sqlite3`) | Almacenamiento relacional de usuarios, perfiles, productos, combos, carritos y pedidos. |
-| **Frontend** | HTML5 semántico | Estructura modular de páginas y partials reutilizables. |
-| **Estilos** | CSS3 nativo (`kawaii_admin.css`) | Paleta de colores kawaii (pasteles), tipografía, diseño responsivo, cards y modales. |
-| **Interactividad** | JavaScript (Vanilla) | Toggle de contraseñas, modales de autenticación y transiciones. |
-| **Servicio de correo** | Gmail SMTP con TLS (puerto 587) | Envío automático de correos con enlaces y tokens seguros para restablecer contraseñas. |
-| **Iconografía** | Font Awesome 6 (CDN) + SVG | Iconos sociales, iconos de interfaz y favicon personalizado en forma de nube. |
-
----
-
-## 3. Librerías y módulos clave
-
-### Django
-- `django.db.models`: Definición de tablas, llaves foráneas, campos UUID, relaciones Many-to-Many con intermediarias y agregaciones (`Count`).
-- `django.shortcuts`: Renderizado (`render`), redirecciones (`redirect`) y obtención de objetos (`get_object_or_404`).
-- `django.contrib.auth`: Autenticación de usuarios (`login`, `logout`, `authenticate`, `User`).
-- `django.contrib.auth.decorators.login_required`: Control de acceso a vistas privadas (carrito, checkout, historial).
-- `django.contrib.auth.views`: Vistas genéricas de restablecimiento de contraseña (`PasswordResetView`, `PasswordResetConfirmView`, etc.).
-- `django.contrib.messages`: Retroalimentación interactiva al usuario (éxito, error, advertencias).
-- `django.db.transaction`: Transacciones atómicas (`@transaction.atomic`) para asegurar la consistencia al crear pedidos y vaciar carritos.
-
-### Biblioteca estándar de Python
-- `uuid`: Generación de claves primarias universales y códigos identificadores seguros.
-- `os`: Lectura de variables de entorno seguras (`GMAIL_USER`, `GMAIL_APP_PASSWORD`).
-- `pathlib.Path`: Resolución multiplataforma de rutas del proyecto.
+| Área | Tecnología | Versión / Herramienta | Uso en el Proyecto |
+| --- | --- | --- | --- |
+| **Backend** | Python | 3.12+ | Lenguaje base del servidor y lógica de negocio. |
+| **Framework Web** | Django | 6.0 | Enrutamiento, ORM, sesiones, auth, context processors, mensajes y panel de administración. |
+| **Base de Datos** | SQLite | 3.x (`db.sqlite3`) | Motor relacional local para usuarios, productos, combos, carritos y pedidos. |
+| **Frontend** | HTML5 Semántico | Estándar W3C | Estructura modular de páginas y plantillas reutilizables. |
+| **Estilos & Diseño** | CSS3 Nativo | `kawaii_admin.css` | Sistema de diseño Kawaii (paleta de rosas, morados pastel, bordes redondeados, sombras suaves y responsive). |
+| **Interactividad** | JavaScript | Vanilla ES6+ | Modales de rastreo de guía, control de contraseñas y transiciones interactivas. |
+| **Servicio de Correo** | Gmail SMTP | TLS (Puerto 587) | Envío automático de notificaciones de pedidos y recuperación de contraseñas con plantillas HTML/texto. |
+| **Canal de Ventas** | WhatsApp API | Click-to-Chat (`wa.me`) | Enlace directo preformateado con número oficial (+57 322 238 5508), ID de pedido y desglose de artículos. |
+| **Iconografía & Fuentes** | Font Awesome 6 + Google Fonts | CDN + Poppins & Quicksand | Tipografía moderna e iconos vectoriales para toda la interfaz. |
 
 ---
 
-## 4. Base de datos y modelos
+## 3. Arquitectura y Módulos Clave
 
-El proyecto utiliza UUID como identificador primario en sus modelos para mayor seguridad y escalabilidad.
+### A. Context Processor Global del Carrito (`sorpresas_kawai/context_processors.py`)
+- Suministra la variable `carrito_total_items` de forma global a todas las plantillas.
+- Muestra dinámicamente la burbuja / badge con el conteo de artículos en el botón del carrito en el encabezado.
+
+### B. Sistema Automatizado de Correos (`sorpresas_kawai/emails.py`)
+- **Confirmación de Compra:** Notifica al cliente cuando se genera una nueva orden.
+- **Actualización de Estado de Pedidos:** Detecta cambios en el modelo `Pedido` y envía correos personalizados:
+  - **PAGADO:** Confirma la verificación del pago y el inicio del empaque.
+  - **ENVIADO:** Informa el despacho del paquete e incluye la **Empresa de Envío** y el **Número de Guía**.
+  - **ENTREGADO:** Notifica la entrega exitosa del paquete.
+  - **CANCELADO:** Notifica la cancelación de la orden con canales de soporte.
+
+### C. Integración de Finalización por WhatsApp (+57 322 238 5508)
+- Métodos implementados en `Pedido`:
+  - `generar_mensaje_whatsapp()`: Compone el texto con código del pedido, nombre del cliente, lista de artículos y total.
+  - `whatsapp_url`: Genera el enlace universal `https://wa.me/573222385508?text=...` codificado para navegador o app móvil.
+- Botones destacados en la pantalla de confirmación (`confirmacion.html`) y en el historial de compras (`mis_pedidos.html`).
+
+---
+
+## 4. Diagrama y Modelo de Datos
 
 ```text
 ┌──────────────┐         ┌──────────────┐         ┌─────────────────┐
-│  Categoria   │ 1 ─── N │   Producto   │ 1 ─── N │ DetallePedido   │
+│  Categoria   │ 1 ─── N │   Producto   │ 1 ─── N │  DetallePedido  │
 └──────────────┘         └──────────────┘         └────────┬────────┘
                                 │                          │
                                 │ N                        │ N
@@ -75,182 +78,171 @@ El proyecto utiliza UUID como identificador primario en sus modelos para mayor s
        └───────── 1 ─── N ── Pedido ─────────── 1 ─── N ───┘
 ```
 
-### Entidades detalladas:
-
-1. **`User` / `UserProfile`**:
-   - `User`: Modelo estándar de Django (nombre de usuario, correo, contraseña cifrada).
-   - `UserProfile`: Relación 1 a 1 para guardar dirección de envío u otros datos del cliente.
-2. **`Categoria`**: Clasificación de productos (Papelería, Accesorios, etc.).
-3. **`Producto`**:
-   - Campos: `nombre`, `descripcion`, `valor_unitario`, `descuento_porcentaje`, `stock`, `imagen`, `imagen_url`, `activo`.
-   - Propiedades: `precio_final` (calcula el descuento aplicado), `get_imagen_url`.
-4. **`Combo`**:
-   - Campos: `nombre`, `descripcion`, `imagen`, `imagen_url`, `valor_combo`, `descuento_porcentaje`, `numero_productos`, `activo`.
-   - Relación M2M con `Producto` mediante la tabla intermedia `CombosProductos`.
-5. **`CombosProductos`**: Almacena los productos específicos y la cantidad de cada uno contenida en un combo.
-6. **`CarritoDeCompras` & `ItemCarrito`**:
-   - Cada usuario registrado posee un único carrito persistente.
-   - Soporta ítems de tipo producto individual o tipo combo con control de cantidades.
-7. **`Pedido`**:
-   - Registra compras generadas: `id_usuario`, `fecha_pedido`, `valor_pagado`, `metodo_pago`, `detalle_pago`, `estado` (`PENDIENTE`, `PAGADO`, `ENVIADO`, `ENTREGADO`, `CANCELADO`).
-   - Gestión logística: `empresa_envio`, `numero_guia` y `comprobante_pago`.
-   - Propiedad `codigo_pedido`: Genera un identificador visual amigable (ej. `#SK-A1B2C3`).
-8. **`DetallePedido`**: Desglose de productos/combos, cantidades y precios históricos al momento de la compra.
+### Modelos Principales:
+1. **`User` / `UserProfile`**: Gestión de usuarios autenticados y dirección de entrega.
+2. **`Categoria`**: Clasificación de productos del catálogo.
+3. **`Producto`**: Inventario de artículos individuales con cálculo de descuento (`precio_final`).
+4. **`Combo` / `CombosProductos`**: Packs armados compuestos por uno o más productos.
+5. **`CarritoDeCompras` / `ItemCarrito`**: Carrito de compras persistente por usuario.
+6. **`Pedido` / `DetallePedido`**: Órdenes creadas con código `#SK-XXXXXX`, estado (`PENDIENTE`, `PAGADO`, `ENVIADO`, `ENTREGADO`, `CANCELADO`), empresa de envío, número de guía y disparador automático de notificaciones.
 
 ---
 
-## 5. Estructura de carpetas del proyecto
+## 5. Estructura de Directorios
 
 ```text
 kawaii/
-├── manage.py                          # Gestor de comandos de Django
-├── db.sqlite3                         # Base de datos SQLite local
+├── manage.py                          # CLI de Django
+├── db.sqlite3                         # Base de datos SQLite
 ├── DOCUMENTACION_TECNICA.md           # Documentación técnica completa
 ├── settings/
-│   ├── settings.py                    # Configuración global, apps, BD, SMTP, estáticos
-│   └── urls.py                        # Enrutador principal del proyecto
+│   ├── settings.py                    # Configuración global, apps, context processors, SMTP y WhatsApp
+│   ├── urls.py                        # Enrutador raíz
+│   ├── wsgi.py                        # Punto de entrada WSGI
+│   └── asgi.py                        # Punto de entrada ASGI
 ├── sorpresas_kawai/
-│   ├── admin.py                       # Configuración y personalización del Django Admin
-│   ├── models.py                      # Definición de todos los modelos del sistema
-│   ├── views.py                       # Controladores y lógica de vistas
-│   ├── urls.py                        # Rutas de la aplicación de tienda
-│   └── migrations/                    # Historial de migraciones del esquema
+│   ├── admin.py                       # Panel administrativo personalizado (PedidoAdmin, etc.)
+│   ├── context_processors.py          # Contador global de artículos del carrito
+│   ├── emails.py                      # Plantillas y envío de correos automáticos
+│   ├── models.py                      # Modelos relacionales y lógica de WhatsApp
+│   ├── views.py                       # Vistas y lógica de negocio
+│   ├── urls.py                        # Rutas de la tienda web
+│   ├── tests.py                       # Suite de pruebas unitarias y de seguridad (13 tests)
+│   └── migrations/                    # Migraciones del esquema de BD
 ├── templates/
-│   ├── base.html                      # Layout maestro con cabecera, estilos y scripts
-│   ├── Inicio.html                    # Página de inicio con banners y novedades
-│   ├── sobre_nosotros.html            # Sección institucional y redes sociales
+│   ├── base.html                      # Layout maestro con navbar y footer
+│   ├── Inicio.html                    # Página principal con novedades y destacados
+│   ├── sobre_nosotros.html            # Información institucional y redes
 │   ├── partials/
-│   │   ├── navbar.html                # Barra de navegación compartida con contador de carrito
-│   │   └── footer.html                # Pie de página global
+│   │   ├── navbar.html                # Barra de navegación con badge de carrito
+│   │   └── footer.html                # Pie de página
 │   ├── admin/
-│   │   ├── logintest.html             # Pantalla de inicio de sesión de clientes
-│   │   └── register.html              # Pantalla de registro de nuevas cuentas
+│   │   ├── logintest.html             # Inicio de sesión
+│   │   └── register.html              # Registro seguro de usuarios
 │   ├── productos/
-│   │   ├── lista.html                 # Catálogo general con filtros por categoría
-│   │   ├── combos.html                # Catálogo de combos preparados
-│   │   └── sorpresas.html             # Sección de scoops y sorpresas kawaii
+│   │   ├── lista.html                 # Catálogo de productos con filtros
+│   │   ├── combos.html                # Catálogo de combos
+│   │   └── sorpresas.html             # Sección de scoops y sorpresas
 │   ├── carrito/
-│   │   └── detalle.html               # Resumen del carrito, selector de envío y checkout
+│   │   └── detalle.html               # Resumen del carrito y checkout
 │   ├── pedido/
-│   │   ├── confirmacion.html          # Confirmación con datos de transferencia y pago
-│   │   └── mis_pedidos.html           # Panel de historial y seguimiento de pedidos
-│   └── registration/                  # Flujo completo de recuperación de contraseña
-│       ├── password_reset_form.html   # Formulario para ingresar correo
-│       ├── password_reset_done.html   # Aviso de correo enviado
-│       ├── password_reset_email.html  # Cuerpo HTML del correo con el enlace seguro
-│       ├── password_reset_subject.txt # Asunto del correo
-│       ├── password_reset_confirm.html# Formulario para definir nueva contraseña
-│       └── password_reset_complete.html# Confirmación de contraseña actualizada
+│   │   ├── confirmacion.html          # Pantalla de confirmación con botón de WhatsApp
+│   │   └── mis_pedidos.html           # Historial y seguimiento de pedidos con guía
+│   └── registration/                  # Plantillas de recuperación de contraseña
 └── static/
     ├── css/
-    │   └── kawaii_admin.css           # Hoja de estilos principal y utilidades
-    └── img/
-        ├── favicon.svg                # Favicon SVG (nube kawaii)
-        ├── hero_kawaii.jpg            # Banner de bienvenida
-        └── placeholder.png            # Imagen por defecto para productos sin foto
+    │   └── kawaii_admin.css           # Hoja de estilos y diseño visual Kawaii
+    └── img/                           # Assets gráficos y favicon
 ```
 
 ---
 
-## 6. Módulos y funcionalidades principales
-
-### 🛍️ Catálogo y navegación
-- **Productos:** Filtros dinámicos por categoría con conteo de existencias y botón directo de compra.
-- **Combos:** Listado de packs especiales con desglose de ítems incluidos y cálculo automático de descuentos.
-- **Sorpresas / Scoops:** Presentación de scoops temáticos con animaciones y selección de tamaño.
-- **Sobre Nosotros:** Página informativa con enlace directo a Instagram y TikTok.
-
-### 🛒 Carrito de compras y Checkout
-- Soporta tanto productos individuales como combos simultáneamente.
-- Modificación en vivo de cantidades (+ / -) o eliminación directa de ítems.
-- Cálculo de subtotal, costo de envío ($10,000 COP) y total final.
-- **Procesamiento de pedidos:** Ejecución atómica (`@transaction.atomic`) para garantizar que la creación del pedido, el desglose en `DetallePedido` y el vaciado del carrito se ejecuten sin inconsistencias.
-
-### 📦 Gestión y seguimiento de pedidos
-- **Pantalla de Confirmación:** Brinda al usuario su código de pedido (`#SK-XXXXXX`), datos de cuentas Nequi/Daviplata/Bancolombia y enlace para adjuntar o reportar el comprobante.
-- **Mis Pedidos (`/mis-pedidos/`):** Vista privada donde cada cliente puede revisar sus compras históricas, estados en tiempo real (Pendiente, Pagado, Enviado, Entregado) y guías de transporte con transportadora asignada.
-
-### 🔐 Autenticación y seguridad
-- Registro de cuentas con validación de contraseñas y unicidad de correo.
-- Inicio de sesión con persistencia mediante sesiones seguras de Django.
-- Cierre de sesión protegido contra métodos no autorizados.
-- **Recuperación de contraseña:** Flujo oficial de Django con tokens criptográficos de un solo uso enviados por correo SMTP.
-
-### ⚙️ Panel de administración personalizado
-- Registro completo de modelos con filtros, búsquedas y columnas informativas (`admin.py`).
-- Capacidad de asignar empresa de transporte y número de guía directamente desde el admin para que el cliente lo visualice al instante en `Mis Pedidos`.
-
----
-
-## 7. Mapa de rutas (Endpoints)
+## 6. Endpoints y Mapa de Rutas
 
 | URL | Nombre de Ruta | Descripción | Acceso |
 | --- | --- | --- | --- |
-| `/` | `inicio` | Landing page principal | Público |
+| `/` | `inicio` | Página de inicio | Público |
 | `/productos/` | `lista_productos` | Catálogo de productos con filtros | Público |
 | `/combos/` | `lista_combos` | Catálogo de combos | Público |
 | `/sorpresa/` | `lista_sorpresas` | Sección de sorpresas y scoops | Público |
-| `/sobre-nosotros/` | `sobre_nosotros` | Información de la marca y redes sociales | Público |
-| `/register/` | `register` | Formulario de registro de usuarios | Público |
+| `/sobre-nosotros/` | `sobre_nosotros` | Información de la tienda | Público |
+| `/register/` | `register` | Formulario de registro de clientes | Público |
 | `/login/` | `login` | Inicio de sesión | Público |
 | `/logout/` | `logout` | Cierre de sesión | Autenticado |
 | `/carrito/` | `ver_carrito` | Vista del carrito de compras | Autenticado |
-| `/agregar/<uuid>/` | `agregar_a_carrito` | Agregar/incrementar producto | Autenticado |
-| `/quitar/<uuid>/` | `quitar_de_carrito` | Disminuir/eliminar producto | Autenticado |
-| `/combos/agregar/<uuid>/` | `agregar_combo_a_carrito` | Agregar combo al carrito | Autenticado |
-| `/combos/quitar/<uuid>/` | `quitar_combo_de_carrito` | Disminuir combo del carrito | Autenticado |
+| `/agregar/<uuid>/` | `agregar_a_carrito` | Añadir producto al carrito | Autenticado |
+| `/quitar/<uuid>/` | `quitar_de_carrito` | Disminuir/remover producto | Autenticado |
+| `/combos/agregar/<uuid>/` | `agregar_combo_a_carrito` | Añadir combo al carrito | Autenticado |
+| `/combos/quitar/<uuid>/` | `quitar_combo_de_carrito` | Disminuir/remover combo | Autenticado |
 | `/carrito/finalizar/` | `finalizar_compra` | Procesar orden y vaciar carrito | Autenticado |
-| `/pedido/confirmacion/<uuid>/`| `pagina_confirmacion` | Pantalla de confirmación y datos de pago | Autenticado |
+| `/pedido/confirmacion/<uuid>/`| `pagina_confirmacion` | Confirmación de compra y botón WhatsApp | Autenticado |
 | `/mis-pedidos/` | `mis_pedidos` | Historial y rastreo de envíos del cliente | Autenticado |
 | `/recuperar-contrasena/` | `password_reset` | Formulario para solicitar reseteo | Público |
 | `/recuperar-contrasena/enviada/` | `password_reset_done` | Confirmación de correo enviado | Público |
-| `/restablecer-contrasena/<uid>/<token>/` | `password_reset_confirm` | Formulario con token para nueva clave | Público |
-| `/restablecer-contrasena/listo/` | `password_reset_complete` | Éxito tras actualizar contraseña | Público |
+| `/restablecer-contrasena/<uid>/<token>/` | `password_reset_confirm` | Formulario para ingresar nueva clave | Público |
+| `/restablecer-contrasena/listo/` | `password_reset_complete` | Clave actualizada correctamente | Público |
 
 ---
 
-## 8. Configuración de variables de entorno
-
-Para el funcionamiento del envío de correos por Gmail SMTP, configure las siguientes variables en su entorno del sistema:
+## 7. Variables de Entorno
 
 ```bash
+# Variables del sistema / producción
+DJANGO_SECRET_KEY="tu_clave_secreta_unica_y_segura"
+DJANGO_DEBUG="True"                        # "True" en desarrollo local, "False" en producción
+DJANGO_ALLOWED_HOSTS="*"                   # Hosts permitidos separados por comas
+
+# Contacto oficial de WhatsApp
+WHATSAPP_PHONE_NUMBER="573222385508"
+
+# Servicio de Correo SMTP (Gmail)
 GMAIL_USER="tucorreo@gmail.com"
-GMAIL_APP_PASSWORD="tu_contraseña_de_aplicacion_de_16_caracteres"
+GMAIL_APP_PASSWORD="tu_password_de_aplicacion_16_caracteres"
 ```
 
-> **Nota:** La contraseña debe generarse en la consola de seguridad de Google ("Contraseñas de aplicación"), no es la contraseña habitual de la cuenta.
+---
+
+## 8. Cómo Usar tu PC como Servidor para Pruebas
+
+Puedes usar tu propio computador como servidor para realizar pruebas tanto desde otros dispositivos en tu casa (como tu celular) como a través de Internet:
+
+### Opción A: Pruebas en Red Local (Celular u otro PC en la misma red Wi-Fi)
+
+1. **Obtener la dirección IP local de tu computador:**
+   Abre una terminal PowerShell y ejecuta:
+   ```powershell
+   ipconfig
+   ```
+   Busca la línea que dice **Dirección IPv4** (por ejemplo: `192.168.1.15`).
+
+2. **Iniciar Django escuchando en todas las interfaces de red:**
+   ```powershell
+   python manage.py runserver 0.0.0.0:8000
+   ```
+
+3. **Abrir la tienda desde tu celular:**
+   Conéctate a la misma red Wi-Fi de tu casa y entra desde el navegador del celular a:
+   ```text
+   http://192.168.1.15:8000/
+   ```
+   *(Reemplaza `192.168.1.15` por la IP que te arrojó `ipconfig`).*
+
+> **Nota:** Si no carga en el celular, asegúrate de que el Firewall de Windows permita el acceso a Python o al puerto 8000 en redes privadas.
 
 ---
 
-## 9. Guía de ejecución en desarrollo
+### Opción B: Pruebas por Internet con Enlace Público Temporal (Túnel Seguro)
 
-1. **Clonar el repositorio y situarse en la carpeta:**
+Si quieres compartir la tienda con alguien que no esté en tu misma red Wi-Fi:
+
+1. Inicia tu servidor local de Django en una terminal:
    ```powershell
-   cd kawaii
+   python manage.py runserver 8000
    ```
-2. **Aplicar migraciones:**
-   ```powershell
-   python manage.py migrate
-   ```
-3. **Crear usuario administrador (opcional):**
-   ```powershell
-   python manage.py createsuperuser
-   ```
-4. **Iniciar el servidor local:**
-   ```powershell
-   python manage.py runserver
-   ```
-5. **Abrir en el navegador:**
-   - Tienda: `http://127.0.0.1:8000/`
-   - Panel de Administración: `http://127.0.0.1:8000/admin/`
+
+2. En otra terminal, crea un túnel temporal gratuito con **localtunnel** o **ngrok**:
+   - Con **localtunnel** (requiere Node.js):
+     ```powershell
+     npx localtunnel --port 8000
+     ```
+   - O con **ngrok**:
+     ```powershell
+     ngrok http 8000
+     ```
+
+3. Obtendrás un enlace público seguro `https://xxxx.loca.lt` o `https://xxxx.ngrok-free.app` que puedes abrir desde cualquier teléfono o computador en el mundo para realizar pruebas en vivo.
 
 ---
 
-## 10. Consideraciones para despliegue a producción
+## 9. Pruebas Automatizadas
 
-- [ ] Establecer `DEBUG = False` en `settings.py`.
-- [ ] Configurar `ALLOWED_HOSTS` con los dominios o subdominios autorizados.
-- [ ] Exportar `SECRET_KEY` a una variable de entorno.
-- [ ] Utilizar un motor de base de datos como PostgreSQL o MySQL para entornos de alta concurrencia.
-- [ ] Configurar un servidor web para archivos estáticos y media (WhiteNoise, AWS S3 o Nginx).
-- [ ] Habilitar certificados SSL/HTTPS obligatorio (`SECURE_SSL_REDIRECT = True`).
+Para validar la integridad de todas las funcionalidades, modelos, seguridad, correos y enlaces de WhatsApp:
+
+```powershell
+python manage.py test
+```
+
+Resultado actual:
+```text
+Ran 13 tests in 17.089s - OK
+```
