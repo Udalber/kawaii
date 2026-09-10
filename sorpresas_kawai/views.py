@@ -81,6 +81,10 @@ def login_view(request):
 
 
 def lista_productos(request):
+    if not Producto.objects.exists():
+        from .seed_data import seed_database
+        seed_database()
+
     categoria_slug = request.GET.get('categoria')
 
     # Obtener productos activos
@@ -140,6 +144,10 @@ def lista_productos(request):
 
 def lista_sorpresas(request):
     """Muestra las experiencias de scoop sorpresa disponibles."""
+    if not Producto.objects.exists():
+        from .seed_data import seed_database
+        seed_database()
+
     scoop_normal = Producto.objects.filter(
         nombre='Scoop Normal',
         id_categoria__nombre__iexact='Sorpresa',
@@ -289,6 +297,10 @@ def register_view(request):
 
 
 def inicio(request):
+    if not Producto.objects.exists():
+        from .seed_data import seed_database
+        seed_database()
+
     # Obtener 3 productos activos al azar (excluyendo categoría Sorpresa si existe)
     productos_query = Producto.objects.filter(activo=True).exclude(
         id_categoria__nombre__iexact='Sorpresa'
@@ -428,6 +440,10 @@ def pagina_confirmacion(request, pedido_id):
 
 def lista_combos(request):
     """Muestra el catálogo de combos disponibles."""
+    if not Producto.objects.exists():
+        from .seed_data import seed_database
+        seed_database()
+
     combos = Combo.objects.filter(activo=True).order_by('nombre')
 
     combos_en_carrito = {}

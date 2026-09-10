@@ -68,8 +68,10 @@ config.json
 staticfiles/
 
 # Archivos multimedia subidos por los usuarios (MEDIA_ROOT)
-# Estos son grandes y específicos del entorno.
-/media/
+# Se incluyen imágenes iniciales del catálogo
+!/media/productos/*
+!/media/combos/*
+
 
 
 # -----------------------------------------------------------------------------
